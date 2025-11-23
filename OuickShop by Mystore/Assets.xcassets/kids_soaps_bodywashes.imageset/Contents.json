@@ -1,0 +1,13 @@
+{
+  "images" : [
+    {
+      "filename" : "Soaps and Body washes.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
