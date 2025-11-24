@@ -38,13 +38,18 @@ class UserViewModel: ObservableObject {
     
     // MARK: - Authentication State Management
     
-    private func checkAuthState() {
+    func checkAuthState() {
         isLoading = true
+        print("🔍 Checking auth state...")
         
         if let user = Auth.auth().currentUser {
+            print("✅ Firebase user found: \(user.uid)")
             self.authUser = user
             loadUserData()
         } else {
+            print("❌ No Firebase user found")
+            self.isLoggedIn = false
+            self.currentUser = nil
             isLoading = false
         }
     }
@@ -107,10 +112,12 @@ class UserViewModel: ObservableObject {
     }
     
     private func createUserDocument(firebaseUser: FirebaseAuth.User) {
+        print("📝 Creating user document for: \(firebaseUser.uid)")
+        
         // Split display name if available
         let displayName = firebaseUser.displayName ?? ""
         let nameComponents = displayName.components(separatedBy: " ")
-        let firstName = nameComponents.first ?? ""
+        let firstName = nameComponents.first ?? "User"
         let lastName = nameComponents.count > 1 ? nameComponents.dropFirst().joined(separator: " ") : ""
         
         let userData: [String: Any] = [
@@ -127,10 +134,20 @@ class UserViewModel: ObservableObject {
                 guard let self = self else { return }
                 
                 if let error = error {
-                    print("Error creating user document: \(error.localizedDescription)")
-                    self.error = "Failed to create user profile: \(error.localizedDescription)"
+                    print("❌ Error creating user document: \(error.localizedDescription)")
+                    
+                    // Check if it's a permission error
+                    if error.localizedDescription.contains("permission") {
+                        print("⚠️ FIREBASE PERMISSION ERROR:")
+                        print("   Please update Firestore security rules in Firebase Console")
+                        print("   See FIREBASE_RULES_SETUP.md for instructions")
+                        self.error = "Firebase permissions not configured. Please update Firestore security rules."
+                    } else {
+                        self.error = "Failed to create user profile: \(error.localizedDescription)"
+                    }
+                    self.isLoading = false
                 } else {
-                    print("User document created successfully")
+                    print("✅ User document created successfully")
                     self.currentUser = User(
                         id: firebaseUser.uid,
                         firstName: firstName,
@@ -140,9 +157,9 @@ class UserViewModel: ObservableObject {
                         addresses: [],
                         profileImageURL: firebaseUser.photoURL?.absoluteString
                     )
-                    // Set login state after creating user document
+                    // Set login state AFTER currentUser is populated
                     self.isLoggedIn = true
-                    print("User logged in: \(self.isLoggedIn)")
+                    print("✅ User logged in. firstName: \(firstName), isLoggedIn: \(self.isLoggedIn)")
                 }
             }
         }
@@ -426,42 +443,60 @@ class UserViewModel: ObservableObject {
     
     func updateProfile(firstName: String, lastName: String, email: String, completion: @escaping (Bool) -> Void) {
         guard let firebaseUser = authUser else {
-            print("No Firebase user found")
+            print("❌ No Firebase user found for profile update")
             completion(false)
             return
         }
         
+        // Ensure we have valid first name (fallback to "User" if empty)
+        let validFirstName = firstName.isEmpty ? "User" : firstName
+        
         let userData: [String: Any] = [
-            "firstName": firstName,
+            "firstName": validFirstName,
             "lastName": lastName,
             "email": email,
             "phone": firebaseUser.phoneNumber ?? "",
             "updatedAt": Timestamp()
         ]
         
-        print("Updating profile for user: \(firebaseUser.uid)")
+        print("📝 Updating profile for user: \(firebaseUser.uid)")
+        print("   firstName: \(validFirstName), lastName: \(lastName), email: \(email)")
         
         db.collection("users").document(firebaseUser.uid).setData(userData, merge: true) { [weak self] error in
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 
                 if let error = error {
-                    print("Error updating profile: \(error.localizedDescription)")
+                    print("❌ Error updating profile: \(error.localizedDescription)")
+                    
+                    // Check if it's a permission error
+                    if error.localizedDescription.contains("permission") {
+                        print("⚠️ FIREBASE PERMISSION ERROR:")
+                        print("   Please update Firestore security rules in Firebase Console")
+                        print("   Go to: https://console.firebase.google.com/project/quickshop-f8450/firestore/rules")
+                        print("   See FIREBASE_RULES_SETUP.md for detailed instructions")
+                        self.error = "Firebase permissions not configured. Please update Firestore security rules in Firebase Console."
+                    } else {
+                        self.error = "Failed to update profile: \(error.localizedDescription)"
+                    }
                     completion(false)
                 } else {
-                    print("Profile updated successfully")
+                    print("✅ Profile updated successfully in Firestore")
+                    
+                    // Update local user object FIRST
                     self.currentUser = User(
                         id: firebaseUser.uid,
-                        firstName: firstName,
+                        firstName: validFirstName,
                         lastName: lastName,
                         email: email,
                         phone: firebaseUser.phoneNumber ?? "",
                         addresses: self.currentUser?.addresses ?? [],
                         profileImageURL: self.currentUser?.profileImageURL
                     )
-                    // Ensure user is marked as logged in after profile setup
+                    
+                    // THEN set logged in state (ensures currentUser is populated)
                     self.isLoggedIn = true
-                    print("User logged in after profile update: \(self.isLoggedIn)")
+                    print("✅ User logged in. firstName: \(validFirstName), isLoggedIn: \(self.isLoggedIn)")
                     completion(true)
                 }
             }

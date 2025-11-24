@@ -4,6 +4,7 @@ struct ProfileSetupView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     
     let phoneNumber: String
+    let email: String
     let onComplete: () -> Void
     
     @State private var firstName: String = ""
@@ -86,12 +87,33 @@ struct ProfileSetupView: View {
                     
                     // Error message
                     if let errorMessage = errorMessage {
-                        HStack {
-                            Text(errorMessage)
-                                .font(.caption)
-                                .foregroundColor(.red)
-                            Spacer()
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundColor(.red)
+                                Text(errorMessage)
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                                Spacer()
+                            }
+                            
+                            // Show Firebase setup instructions if it's a permission error
+                            if errorMessage.contains("Firebase") || errorMessage.contains("permission") {
+                                Text("📝 Update Firebase Firestore Rules:")
+                                    .font(.caption2)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.orange)
+                                    .padding(.top, 4)
+                                
+                                Text("1. Go to Firebase Console\n2. Select Firestore Database\n3. Update Security Rules\n\nSee FIREBASE_RULES_SETUP.md")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                    .padding(.leading, 4)
+                            }
                         }
+                        .padding(12)
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(8)
                     }
                 }
                 .padding(.horizontal, 24)
@@ -126,14 +148,35 @@ struct ProfileSetupView: View {
             
             // Skip option (optional)
             Button(action: {
-                // Skip profile setup for now
-                onComplete()
+                // Create a minimal profile when skipping
+                print("⏭️ Skipping profile setup - creating minimal profile")
+                isLoading = true
+                errorMessage = nil
+                
+                // Create minimal profile with "User" as first name
+                userViewModel.updateProfile(
+                    firstName: "User",
+                    lastName: "",
+                    email: email
+                ) { success in
+                    DispatchQueue.main.async {
+                        isLoading = false
+                        if success {
+                            print("✅ Minimal profile created successfully, completing setup")
+                            onComplete()
+                        } else {
+                            print("❌ Failed to create minimal profile")
+                            errorMessage = "Failed to skip setup. Please try again."
+                        }
+                    }
+                }
             }) {
                 Text("Skip for now")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.gray)
             }
             .padding(.bottom, 40)
+            .disabled(isLoading)
         }
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -194,16 +237,18 @@ struct ProfileSetupView: View {
         userViewModel.updateProfile(
             firstName: trimmedFirstName, 
             lastName: trimmedLastName, 
-            email: userViewModel.authUser?.email ?? userViewModel.currentUser?.email ?? ""
+            email: email
         ) { success in
             DispatchQueue.main.async {
                 isLoading = false
                 
                 if success {
-                    print("Profile setup completed successfully")
+                    print("✅ Profile setup completed successfully")
+                    print("   isLoggedIn: \(self.userViewModel.isLoggedIn)")
+                    print("   currentUser: \(self.userViewModel.currentUser?.firstName ?? "nil")")
                     onComplete()
                 } else {
-                    print("Failed to save profile")
+                    print("❌ Failed to save profile")
                     errorMessage = "Failed to save profile. Please try again."
                 }
             }
@@ -214,6 +259,7 @@ struct ProfileSetupView: View {
 #Preview {
     ProfileSetupView(
         phoneNumber: "9876543210",
+        email: "test@example.com",
         onComplete: { }
     )
     .environmentObject(UserViewModel())

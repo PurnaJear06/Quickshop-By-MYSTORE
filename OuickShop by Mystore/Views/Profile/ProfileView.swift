@@ -21,7 +21,12 @@ struct ProfileView: View {
                 Color.gray.opacity(0.1).ignoresSafeArea()
                 
                 if userViewModel.isLoading {
-                    ProgressView()
+                    VStack(spacing: 16) {
+                        ProgressView()
+                        Text("Loading profile...")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                    }
                 } else if let user = userViewModel.currentUser {
                     ScrollView {
                         VStack(spacing: 16) {
@@ -60,7 +65,41 @@ struct ProfileView: View {
                         EditProfileView(user: user)
                     }
                 } else {
-                    Text("Failed to load profile")
+                    VStack(spacing: 20) {
+                        Image(systemName: "person.crop.circle.badge.exclamationmark")
+                            .font(.system(size: 60))
+                            .foregroundColor(.gray)
+                        
+                        Text("Failed to load profile")
+                            .font(.headline)
+                        
+                        Text("Please try logging in again or check your internet connection")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 40)
+                        
+                        Button(action: {
+                            userViewModel.checkAuthState()
+                        }) {
+                            Text("Retry")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(width: 120)
+                                .padding()
+                                .background(Color("primaryRed"))
+                                .cornerRadius(10)
+                        }
+                        
+                        Button(action: {
+                            userViewModel.signOut()
+                        }) {
+                            Text("Sign Out")
+                                .font(.subheadline)
+                                .foregroundColor(Color("primaryRed"))
+                        }
+                        .padding(.top, 8)
+                    }
                 }
         }
         .navigationTitle("My Profile")

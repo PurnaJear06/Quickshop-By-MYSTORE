@@ -12,13 +12,19 @@ struct SplashView: View {
         ZStack {
             if isActive {
                 // Show AuthView first instead of MainTabView
-                if userViewModel.isLoggedIn {
-                    MainTabView()
-                        .transition(.opacity.combined(with: .slide))
-                } else {
-                    AuthView()
-                        .transition(.opacity.combined(with: .slide))
+                // This will automatically update when isLoggedIn changes
+                Group {
+                    if userViewModel.isLoggedIn {
+                        MainTabView()
+                            .transition(.opacity.combined(with: .slide))
+                            .id("mainTab")
+                    } else {
+                        AuthView()
+                            .transition(.opacity.combined(with: .slide))
+                            .id("auth")
+                    }
                 }
+                .animation(.easeInOut(duration: 0.3), value: userViewModel.isLoggedIn)
             } else {
                 // Full screen banner
                 GeometryReader { geo in

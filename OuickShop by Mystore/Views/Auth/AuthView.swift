@@ -4,6 +4,8 @@ struct AuthView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @State private var currentStep: AuthStep = .welcome
     @State private var phoneNumber: String = ""
+    @State private var email: String = ""
+    @Environment(\.dismiss) private var dismiss
     
     enum AuthStep {
         case welcome
@@ -51,6 +53,8 @@ struct AuthView: View {
                             onVerified: { isNewUser in
                                 withAnimation(.easeInOut) {
                                     if isNewUser {
+                                        // Get email from Firebase user if available
+                                        email = userViewModel.authUser?.email ?? ""
                                         currentStep = .profileSetup
                                     }
                                     // If existing user, UserViewModel will handle login automatically
@@ -69,6 +73,7 @@ struct AuthView: View {
                                 // Check if user needs profile setup
                                 if userViewModel.currentUser?.firstName.isEmpty ?? true {
                                     withAnimation(.easeInOut) {
+                                        email = userViewModel.authUser?.email ?? ""
                                         currentStep = .profileSetup
                                     }
                                 }
@@ -90,6 +95,7 @@ struct AuthView: View {
                         EmailSignupView(
                             onSignupSuccess: { isNewUser in
                                 withAnimation(.easeInOut) {
+                                    email = userViewModel.authUser?.email ?? ""
                                     currentStep = .profileSetup
                                 }
                             },
@@ -103,9 +109,13 @@ struct AuthView: View {
                     case .profileSetup:
                         ProfileSetupView(
                             phoneNumber: phoneNumber,
+                            email: email,
                             onComplete: {
                                 // Profile setup complete - UserViewModel should have updated isLoggedIn
-                                print("Profile setup completed")
+                                print("✅ Profile setup completed in AuthView")
+                                print("   isLoggedIn: \(userViewModel.isLoggedIn)")
+                                print("   currentUser: \(userViewModel.currentUser?.firstName ?? "nil")")
+                                // Navigation will happen automatically via SplashView observing isLoggedIn
                             }
                         )
                     }
@@ -130,11 +140,23 @@ struct WelcomeView: View {
             
             // Logo/App Name Section
             VStack(spacing: 20) {
-                // App Logo
-                Image("AppIcon-1024")
-                    .resizable()
-                    .frame(width: 80, height: 80)
-                    .cornerRadius(20)
+                // App Logo - Using system icon as placeholder
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color("primaryYellow"), Color("secondaryOrange")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 80, height: 80)
+                    
+                    Image(systemName: "cart.fill")
+                        .font(.system(size: 36, weight: .medium))
+                        .foregroundColor(.white)
+                }
+                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
                 
                 VStack(spacing: 8) {
                     Text("QuickShop")
