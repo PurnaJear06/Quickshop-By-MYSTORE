@@ -137,12 +137,12 @@ struct ProfileView: View {
                             .fill(Color("primaryYellow").opacity(0.15))
                             .frame(width: 140, height: 140)
                             .blur(radius: 35)
-                            .offset(x: 80, y: -20)
+                            .offset(x: 40, y: -10)
                         Circle()
                             .fill(Color("secondaryOrange").opacity(0.1))
                             .frame(width: 110, height: 110)
                             .blur(radius: 30)
-                            .offset(x: -80, y: 20)
+                            .offset(x: -40, y: 10)
                     }
                 )
             

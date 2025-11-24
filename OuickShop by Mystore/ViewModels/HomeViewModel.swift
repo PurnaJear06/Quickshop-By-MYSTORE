@@ -79,6 +79,8 @@ class HomeViewModel: ObservableObject {
                         
                         guard let name = data["name"] as? String else { return nil }
                         
+                        let category = data["category"] as? String ?? "Other"
+                        
                         return Product(
                             id: doc.documentID,
                             name: name,
@@ -86,7 +88,7 @@ class HomeViewModel: ObservableObject {
                             price: data["price"] as? Double ?? 0.0,
                             discountPrice: data["discountPrice"] as? Double,
                             imageURL: data["imageURL"] as? String ?? "",
-                            category: data["category"] as? String ?? "Other",
+                            category: category,
                             isAvailable: data["isAvailable"] as? Bool ?? true,
                             isFeatured: data["isFeatured"] as? Bool ?? false,
                             weight: data["weight"] as? String ?? "1pc",
@@ -95,6 +97,10 @@ class HomeViewModel: ObservableObject {
                     }
                     
                     print("✅ Loaded \(self.products.count) products from Firestore")
+                    
+                    // Log unique categories for debugging
+                    let uniqueCategories = Set(self.products.map { $0.category })
+                    print("📂 Product categories in Firestore: \(uniqueCategories.sorted())")
                     
                     // Update featured products
                     self.featuredProducts = self.products.filter { $0.isFeatured }

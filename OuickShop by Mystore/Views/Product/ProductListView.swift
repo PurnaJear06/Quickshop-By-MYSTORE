@@ -23,29 +23,46 @@ struct ProductListView: View {
         // Filter products from HomeViewModel based on category
         let normalizedCategoryTitle = categoryTitle.lowercased()
         
-        return homeViewModel.products.filter { product in
+        // If no products loaded yet, return empty
+        guard !homeViewModel.products.isEmpty else {
+            print("⚠️ No products available in HomeViewModel")
+            return []
+        }
+        
+        let filtered = homeViewModel.products.filter { product in
             let normalizedProductCategory = product.category.lowercased()
             
             // Match category names with flexible matching
+            let matches: Bool
             switch normalizedCategoryTitle {
             case "cookies & biscuits", "cookies", "biscuits":
-                return normalizedProductCategory.contains("cookie") || normalizedProductCategory.contains("biscuit")
+                matches = normalizedProductCategory.contains("cookie") || normalizedProductCategory.contains("biscuit")
             case "milk and dairy", "dairy", "milk":
-                return normalizedProductCategory.contains("dairy") || normalizedProductCategory.contains("milk")
+                matches = normalizedProductCategory.contains("dairy") || normalizedProductCategory.contains("milk")
             case "summer category", "summer":
-                return normalizedProductCategory.contains("summer") || normalizedProductCategory.contains("beverage")
+                matches = normalizedProductCategory.contains("summer") || normalizedProductCategory.contains("beverage")
             case "beauty zone", "beauty":
-                return normalizedProductCategory.contains("beauty") || normalizedProductCategory.contains("cosmetic")
+                matches = normalizedProductCategory.contains("beauty") || normalizedProductCategory.contains("cosmetic")
             case "kids zone", "kids":
-                return normalizedProductCategory.contains("kids") || normalizedProductCategory.contains("baby")
+                matches = normalizedProductCategory.contains("kids") || normalizedProductCategory.contains("baby")
             case "grocery essentials", "grocery":
-                return normalizedProductCategory.contains("grocery") || normalizedProductCategory.contains("essential")
+                matches = normalizedProductCategory.contains("grocery") || normalizedProductCategory.contains("essential")
+            case "snacks & munchies", "snacks", "munchies":
+                matches = normalizedProductCategory.contains("snack") || normalizedProductCategory.contains("munchies")
             default:
-                // For any other category, try to match by category name
-                return normalizedProductCategory.contains(normalizedCategoryTitle) || 
-                       normalizedCategoryTitle.contains(normalizedProductCategory)
+                // For any other category, use flexible partial matching
+                // Check if either contains the other (more lenient)
+                matches = normalizedProductCategory.contains(normalizedCategoryTitle) || 
+                         normalizedCategoryTitle.contains(normalizedProductCategory) ||
+                         normalizedProductCategory.split(separator: " ").contains(where: { normalizedCategoryTitle.contains($0) }) ||
+                         normalizedCategoryTitle.split(separator: " ").contains(where: { normalizedProductCategory.contains($0) })
             }
+            
+            return matches
         }
+        
+        print("📦 Category '\(categoryTitle)': Found \(filtered.count) products out of \(homeViewModel.products.count) total")
+        return filtered
     }
     
     // Filtered and sorted products
