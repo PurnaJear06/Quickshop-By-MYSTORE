@@ -393,7 +393,9 @@ struct ProfileView: View {
                             .font(.headline)
                             .foregroundColor(Color("primaryYellow"))
                             .frame(width: 32)
-                            .padding(.leading, 12)            Text(title)
+                            .padding(.leading, 12)
+            
+            Text(title)
                 .font(.body)
             
             Spacer()
