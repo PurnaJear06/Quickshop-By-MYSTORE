@@ -117,6 +117,7 @@ struct HomeView: View {
             }
         }
         .onAppear {
+            print("🏠 HomeView appeared - initializing...")
             if selectedCategory == nil {
                 selectedCategory = "All"
             }

@@ -119,7 +119,7 @@ class UserViewModel: ObservableObject {
                         profileImageURL: data["profileImageURL"] as? String
                     )
                     self.isLoggedIn = true
-                    print("✅ User loaded successfully. Name: \(finalFirstName) \(finalLastName), IsLoggedIn: \(self.isLoggedIn)")
+                    print("✅ User loaded successfully. Name: \(self.currentUser?.firstName ?? "") \(self.currentUser?.lastName ?? ""), IsLoggedIn: \(self.isLoggedIn)")
                     self.loadOrders()
                 } else {
                     print("User document not found - creating new user")
@@ -588,7 +588,14 @@ class UserViewModel: ObservableObject {
                     guard let self = self else { return }
                     
                     if let error = error {
-                        self.error = "Failed to load orders: \(error.localizedDescription)"
+                        // Check if it's an index error
+                        if error.localizedDescription.contains("index") {
+                            print("⚠️ Orders query requires Firestore index. Using empty orders for now.")
+                            print("📝 Create index at: https://console.firebase.google.com/project/quickshop-f8450/firestore/indexes")
+                            self.orders = [] // Use empty orders instead of showing error
+                        } else {
+                            self.error = "Failed to load orders: \(error.localizedDescription)"
+                        }
                         return
                     }
                     

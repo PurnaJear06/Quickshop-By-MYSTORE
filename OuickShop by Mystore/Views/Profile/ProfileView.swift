@@ -131,18 +131,18 @@ struct ProfileView: View {
                 )
                 .shadow(color: Color.black.opacity(0.06), radius: 10, x: 0, y: 6)
                 .overlay(
-                    // Decorative glow bubbles (subtle)
+                    // Decorative glow bubbles (subtle) - centered for better balance
                     ZStack {
                         Circle()
-                            .fill(Color("primaryYellow").opacity(0.18))
-                            .frame(width: 120, height: 120)
-                            .blur(radius: 30)
-                            .offset(x: 120, y: -40)
+                            .fill(Color("primaryYellow").opacity(0.15))
+                            .frame(width: 140, height: 140)
+                            .blur(radius: 35)
+                            .offset(x: 80, y: -20)
                         Circle()
-                            .fill(Color("secondaryOrange").opacity(0.12))
-                            .frame(width: 90, height: 90)
-                            .blur(radius: 25)
-                            .offset(x: -100, y: 40)
+                            .fill(Color("secondaryOrange").opacity(0.1))
+                            .frame(width: 110, height: 110)
+                            .blur(radius: 30)
+                            .offset(x: -80, y: 20)
                     }
                 )
             
@@ -250,8 +250,8 @@ struct ProfileView: View {
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(Color("primaryRed"))
-                    .foregroundColor(.white)
+                    .background(Color("primaryYellow"))
+                    .foregroundColor(.black)
                     .cornerRadius(5)
                 }
             }
@@ -388,14 +388,12 @@ struct ProfileView: View {
     
     // Setting Row
     private func settingRow(icon: String, title: String, value: String? = nil, hasToggle: Bool = false) -> some View {
-        HStack {
-            Image(systemName: icon)
-                .font(.headline)
-                .foregroundColor(Color("primaryRed"))
-                .frame(width: 32)
-                .padding(.leading, 12)
-            
-            Text(title)
+                    HStack {
+                        Image(systemName: icon)
+                            .font(.headline)
+                            .foregroundColor(Color("primaryYellow"))
+                            .frame(width: 32)
+                            .padding(.leading, 12)            Text(title)
                 .font(.body)
             
             Spacer()

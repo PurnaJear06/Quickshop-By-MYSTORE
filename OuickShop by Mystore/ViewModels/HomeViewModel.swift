@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import FirebaseFirestore
 
 class HomeViewModel: ObservableObject {
     // Published properties for UI updates
@@ -27,34 +28,93 @@ class HomeViewModel: ObservableObject {
     // Cancellables for Combine
     private var cancellables = Set<AnyCancellable>()
     
+    // Firestore reference
+    private let db = Firestore.firestore()
+    private var productsListener: ListenerRegistration?
+    
     init() {
-        // Load mock data (in a real app, this would fetch from Firebase)
-        loadData()
+        print("🏠 HomeViewModel initialized - starting data load")
+        
+        // Load real products from Firebase Firestore
+        loadProductsFromFirestore()
+        
+        // Load categories
+        loadCategories()
         
         // Setup search functionality
         setupSearchPublisher()
     }
     
-    private func loadData() {
+    deinit {
+        // Remove Firestore listener when ViewModel is deallocated
+        productsListener?.remove()
+    }
+    
+    // Load products from Firestore with real-time updates
+    private func loadProductsFromFirestore() {
         isLoading = true
+        print("📦 Loading products from Firestore...")
         
-        // Simulate network delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            guard let self = self else { return }
-            
-            // Load products and categories from mock data
-            self.products = Product.sampleProducts
-            self.categories = Category.sampleCategories
-            self.featuredProducts = self.products.filter { $0.isFeatured }
-            self.filteredProducts = self.products
-            
-            // Set recent products (in a real app, this would be based on user's order history)
-            if !self.products.isEmpty {
-                self.recentProducts = Array(self.products.prefix(5))
+        // Set up real-time listener for products collection
+        productsListener = db.collection("products")
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let self = self else { return }
+                
+                DispatchQueue.main.async {
+                    if let error = error {
+                        print("❌ Error loading products: \(error.localizedDescription)")
+                        self.isLoading = false
+                        return
+                    }
+                    
+                    guard let documents = snapshot?.documents else {
+                        print("⚠️ No products found in Firestore")
+                        self.isLoading = false
+                        return
+                    }
+                    
+                    // Parse products from Firestore
+                    self.products = documents.compactMap { doc -> Product? in
+                        let data = doc.data()
+                        
+                        guard let name = data["name"] as? String else { return nil }
+                        
+                        return Product(
+                            id: doc.documentID,
+                            name: name,
+                            description: data["description"] as? String ?? "",
+                            price: data["price"] as? Double ?? 0.0,
+                            discountPrice: data["discountPrice"] as? Double,
+                            imageURL: data["imageURL"] as? String ?? "",
+                            category: data["category"] as? String ?? "Other",
+                            isAvailable: data["isAvailable"] as? Bool ?? true,
+                            isFeatured: data["isFeatured"] as? Bool ?? false,
+                            weight: data["weight"] as? String ?? "1pc",
+                            stockQuantity: data["stockQuantity"] as? Int ?? 0
+                        )
+                    }
+                    
+                    print("✅ Loaded \(self.products.count) products from Firestore")
+                    
+                    // Update featured products
+                    self.featuredProducts = self.products.filter { $0.isFeatured }
+                    self.filteredProducts = self.products
+                    
+                    // Set recent products (first 5 for now)
+                    if !self.products.isEmpty {
+                        self.recentProducts = Array(self.products.prefix(5))
+                    }
+                    
+                    self.isLoading = false
+                }
             }
-            
-            self.isLoading = false
-        }
+    }
+    
+    // Load categories
+    private func loadCategories() {
+        // For now, use sample categories
+        // In future, you can load these from Firestore as well
+        self.categories = Category.sampleCategories
     }
     
     private func setupSearchPublisher() {
@@ -97,16 +157,14 @@ class HomeViewModel: ObservableObject {
         selectedCategory = category
     }
     
-    // Method to simulate refreshing data
+    // Method to refresh products from Firestore
     func refreshData() {
+        print("🔄 Refreshing products...")
+        // Real-time listener will automatically update products
+        // Just show loading indicator briefly
         isLoading = true
-        
-        // Simulate network delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self = self else { return }
-            
-            // Reload data (in a real app, this would fetch fresh data from Firebase)
-            self.loadData()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.isLoading = false
         }
     }
 } 

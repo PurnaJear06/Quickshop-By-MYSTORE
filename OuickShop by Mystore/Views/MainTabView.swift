@@ -112,7 +112,7 @@ struct MainTabView: View {
                     if index == 2 && cartViewModel.cartItems.count > 0 {
                 ZStack {
                     Circle()
-                        .fill(Color("primaryRed"))
+                        .fill(Color("primaryYellow"))
                         .frame(width: 18, height: 18)
                     
                     Text("\(cartViewModel.cartItems.count)")
@@ -256,7 +256,7 @@ struct OrderAgainView: View {
             
             Divider()
             
-            // Reorder button - using consistent primaryRed color
+            // Reorder button - using consistent primaryYellow color
             Button(action: {
                 reorderItems(from: order)
             }) {
@@ -265,11 +265,11 @@ struct OrderAgainView: View {
                     Text("Reorder")
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                     Spacer()
                 }
                 .padding(.vertical, 8)
-                .background(Color("primaryRed"))
+                .background(Color("primaryYellow"))
                 .cornerRadius(8)
             }
         }
@@ -296,10 +296,10 @@ struct OrderAgainView: View {
                 Text(userViewModel.isLoggedIn ? "Start shopping" : "Sign in")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundColor(.white)
+                    .foregroundColor(.black)
                     .padding(.vertical, 10)
                     .padding(.horizontal, 24)
-                    .background(Color("primaryRed")) // Using consistent color
+                    .background(Color("primaryYellow")) // Using consistent color
                     .cornerRadius(8)
             }
         }
@@ -486,9 +486,9 @@ struct EnhancedAddButton: View {
                 }) {
                     Image(systemName: "minus")
                         .font(.system(size: 8, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                         .frame(width: 20, height: 20)
-                        .background(Color("primaryRed"))
+                        .background(Color("primaryYellow"))
                         .cornerRadius(3, corners: [.topLeft, .bottomLeft])
                 }
                 
@@ -530,9 +530,9 @@ struct EnhancedAddButton: View {
                 }) {
                     Image(systemName: "plus")
                         .font(.system(size: 8, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.black)
                         .frame(width: 20, height: 20)
-                        .background(Color("primaryRed"))
+                        .background(Color("primaryYellow"))
                         .cornerRadius(3, corners: [.topRight, .bottomRight])
                 }
             }
@@ -582,7 +582,7 @@ struct EnhancedAddButton: View {
                 .frame(width: 24, height: 24)
                 .background(
                     Circle()
-                        .fill(showAddedFeedback ? Color("primaryGreen") : Color("primaryRed"))
+                        .fill(showAddedFeedback ? Color("primaryGreen") : Color("primaryYellow"))
                 )
                 .scaleEffect(addingToCart ? 0.95 : 1.0)
             }

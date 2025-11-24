@@ -18,23 +18,33 @@ struct ProductListView: View {
     @State private var animateProducts = false
     @Environment(\.dismiss) private var dismiss
     
-    // Sample products data based on category
+    // Products data based on category from Firestore
     private var categoryProducts: [Product] {
-        switch categoryTitle.lowercased() {
-        case "cookies & biscuits", "cookies", "biscuits":
-            return cookiesProducts
-        case "milk and dairy", "dairy", "milk":
-            return dairyProducts
-        case "summer category", "summer":
-            return summerProducts
-        case "beauty zone", "beauty":
-            return beautyProducts
-        case "kids zone", "kids":
-            return kidsProducts
-        case "grocery essentials", "grocery":
-            return groceryProducts
-        default:
-            return Product.sampleProducts
+        // Filter products from HomeViewModel based on category
+        let normalizedCategoryTitle = categoryTitle.lowercased()
+        
+        return homeViewModel.products.filter { product in
+            let normalizedProductCategory = product.category.lowercased()
+            
+            // Match category names with flexible matching
+            switch normalizedCategoryTitle {
+            case "cookies & biscuits", "cookies", "biscuits":
+                return normalizedProductCategory.contains("cookie") || normalizedProductCategory.contains("biscuit")
+            case "milk and dairy", "dairy", "milk":
+                return normalizedProductCategory.contains("dairy") || normalizedProductCategory.contains("milk")
+            case "summer category", "summer":
+                return normalizedProductCategory.contains("summer") || normalizedProductCategory.contains("beverage")
+            case "beauty zone", "beauty":
+                return normalizedProductCategory.contains("beauty") || normalizedProductCategory.contains("cosmetic")
+            case "kids zone", "kids":
+                return normalizedProductCategory.contains("kids") || normalizedProductCategory.contains("baby")
+            case "grocery essentials", "grocery":
+                return normalizedProductCategory.contains("grocery") || normalizedProductCategory.contains("essential")
+            default:
+                // For any other category, try to match by category name
+                return normalizedProductCategory.contains(normalizedCategoryTitle) || 
+                       normalizedCategoryTitle.contains(normalizedProductCategory)
+            }
         }
     }
     
@@ -379,7 +389,7 @@ struct SortSheet: View {
                             if selectedSortOption == option {
                                 Image(systemName: "checkmark")
                                     .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(Color("primaryRed"))
+                                    .foregroundColor(Color("primaryYellow"))
                             }
                         }
                         .padding(.horizontal, 20)
@@ -449,7 +459,7 @@ struct ProductListCard: View {
                             .foregroundColor(.white)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 2)
-                            .background(Color("primaryRed"))
+                            .background(Color("primaryGreen"))
                             .cornerRadius(3)
                             .padding(6)
                     }
@@ -687,8 +697,8 @@ struct FilterView: View {
                                     .font(.system(size: 12))
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 6)
-                                    .background(filters.priceRange == range ? Color("primaryRed") : Color.gray.opacity(0.2))
-                                    .foregroundColor(filters.priceRange == range ? .white : .black)
+                                    .background(filters.priceRange == range ? Color("primaryYellow") : Color.gray.opacity(0.2))
+                                    .foregroundColor(filters.priceRange == range ? .black : .black)
                                     .cornerRadius(16)
                             }
                         }
@@ -756,7 +766,7 @@ struct SortOptionsView: View {
                             if selectedOption == option {
                                 Image(systemName: "checkmark")
                                     .font(.system(size: 16, weight: .medium))
-                                    .foregroundColor(Color("primaryRed"))
+                                    .foregroundColor(Color("primaryYellow"))
                             }
                         }
                         .padding(.horizontal, 20)
@@ -785,80 +795,8 @@ struct SortOptionsView: View {
     }
 }
 
-// MARK: - Sample Data Extensions
-extension ProductListView {
-    // Cookies & Biscuits Products
-    private var cookiesProducts: [Product] {
-        [
-            Product(id: "c1", name: "Britannia Little Hearts Classic Crunch", description: "Classic heart-shaped biscuits", price: 30, discountPrice: 28, imageURL: "cookies1", category: "Cookies", isAvailable: true, isFeatured: true, weight: "70g", stockQuantity: 50),
-            Product(id: "c2", name: "Hide & Seek Parle Chocolate Chip", description: "Chocolate chip cookies", price: 30, discountPrice: 28, imageURL: "cookies2", category: "Cookies", isAvailable: true, isFeatured: false, weight: "100g", stockQuantity: 45),
-            Product(id: "c3", name: "Karachi Bakery Fruit Biscuits", description: "Premium fruit biscuits", price: 190, discountPrice: 173, imageURL: "cookies3", category: "Cookies", isAvailable: true, isFeatured: true, weight: "400g", stockQuantity: 30),
-            Product(id: "c4", name: "Karachi Bakery Osmania Biscuits", description: "Traditional Hyderabadi biscuits", price: 180, discountPrice: 158, imageURL: "cookies4", category: "Cookies", isAvailable: true, isFeatured: false, weight: "400g", stockQuantity: 25),
-            Product(id: "c5", name: "Parle-G Gold Biscuits", description: "India's favorite glucose biscuits", price: 20, discountPrice: nil, imageURL: "cookies5", category: "Cookies", isAvailable: true, isFeatured: true, weight: "200g", stockQuantity: 100),
-            Product(id: "c6", name: "Monaco Classic Salted Biscuits", description: "Light and crispy salted biscuits", price: 25, discountPrice: 22, imageURL: "cookies6", category: "Cookies", isAvailable: true, isFeatured: false, weight: "150g", stockQuantity: 60)
-        ]
-    }
-    
-    // Milk and Dairy Products
-    private var dairyProducts: [Product] {
-        [
-            Product(id: "d1", name: "Heritage Daily Health Toned Milk", description: "Fresh toned milk", price: 27, discountPrice: 26, imageURL: "milk1", category: "Dairy", isAvailable: true, isFeatured: true, weight: "500ml", stockQuantity: 80),
-            Product(id: "d2", name: "Nandini GoodLife Toned Milk", description: "UHT sterilized toned milk", price: 70, discountPrice: nil, imageURL: "milk2", category: "Dairy", isAvailable: true, isFeatured: false, weight: "1L", stockQuantity: 50),
-            Product(id: "d3", name: "Amul Taaza Toned Milk", description: "Fresh and pure toned milk", price: 74, discountPrice: nil, imageURL: "milk3", category: "Dairy", isAvailable: true, isFeatured: true, weight: "1L", stockQuantity: 45),
-            Product(id: "d4", name: "Amul Gold Homogenised Milk", description: "Rich and creamy homogenised milk", price: 80, discountPrice: nil, imageURL: "milk4", category: "Dairy", isAvailable: true, isFeatured: false, weight: "1L", stockQuantity: 40),
-            Product(id: "d5", name: "Fresh Paneer", description: "Soft and fresh cottage cheese", price: 120, discountPrice: 110, imageURL: "paneer", category: "Dairy", isAvailable: true, isFeatured: true, weight: "200g", stockQuantity: 25),
-            Product(id: "d6", name: "Greek Yogurt", description: "Thick and creamy Greek yogurt", price: 80, discountPrice: 75, imageURL: "yogurt", category: "Dairy", isAvailable: true, isFeatured: false, weight: "400g", stockQuantity: 30)
-        ]
-    }
-    
-    // Summer Products
-    private var summerProducts: [Product] {
-        [
-            Product(id: "s1", name: "Fresh Watermelon", description: "Sweet and juicy watermelon", price: 59, discountPrice: 49, imageURL: "watermelon", category: "Summer", isAvailable: true, isFeatured: true, weight: "1kg", stockQuantity: 20),
-            Product(id: "s2", name: "Coconut Water", description: "Natural tender coconut water", price: 45, discountPrice: 35, imageURL: "coconut", category: "Summer", isAvailable: true, isFeatured: true, weight: "200ml", stockQuantity: 50),
-            Product(id: "s3", name: "Ice Cream Tub", description: "Vanilla ice cream family pack", price: 249, discountPrice: 199, imageURL: "icecream", category: "Summer", isAvailable: true, isFeatured: false, weight: "1L", stockQuantity: 15),
-            Product(id: "s4", name: "Cold Coffee", description: "Ready to drink cold coffee", price: 149, discountPrice: 129, imageURL: "coldcoffee", category: "Summer", isAvailable: true, isFeatured: true, weight: "300ml", stockQuantity: 35),
-            Product(id: "s5", name: "Fresh Lemonade", description: "Refreshing lemonade drink", price: 49, discountPrice: 39, imageURL: "lemonade", category: "Summer", isAvailable: true, isFeatured: true, weight: "250ml", stockQuantity: 40),
-            Product(id: "s6", name: "Frozen Yogurt", description: "Healthy frozen yogurt", price: 109, discountPrice: 89, imageURL: "frozenyogurt", category: "Summer", isAvailable: true, isFeatured: false, weight: "200g", stockQuantity: 25)
-        ]
-    }
-    
-    // Beauty Products
-    private var beautyProducts: [Product] {
-        [
-            Product(id: "b1", name: "Face Moisturizer", description: "Daily hydrating face moisturizer", price: 399, discountPrice: 299, imageURL: "moisturizer", category: "Beauty", isAvailable: true, isFeatured: true, weight: "50ml", stockQuantity: 30),
-            Product(id: "b2", name: "Lipstick Set", description: "Matte finish lipstick collection", price: 799, discountPrice: 599, imageURL: "lipstick", category: "Beauty", isAvailable: true, isFeatured: true, weight: "4g x 3", stockQuantity: 20),
-            Product(id: "b3", name: "Hair Serum", description: "Nourishing hair repair serum", price: 549, discountPrice: 449, imageURL: "hairserum", category: "Beauty", isAvailable: true, isFeatured: false, weight: "100ml", stockQuantity: 25),
-            Product(id: "b4", name: "Perfume Spray", description: "Long lasting fragrance spray", price: 1199, discountPrice: 899, imageURL: "perfume", category: "Beauty", isAvailable: true, isFeatured: true, weight: "100ml", stockQuantity: 15),
-            Product(id: "b5", name: "Foundation", description: "Full coverage liquid foundation", price: 999, discountPrice: 799, imageURL: "foundation", category: "Beauty", isAvailable: true, isFeatured: false, weight: "30ml", stockQuantity: 18),
-            Product(id: "b6", name: "Nail Polish", description: "Quick dry nail polish", price: 249, discountPrice: 199, imageURL: "nailpolish", category: "Beauty", isAvailable: true, isFeatured: false, weight: "15ml", stockQuantity: 40)
-        ]
-    }
-    
-    // Kids Products
-    private var kidsProducts: [Product] {
-        [
-            Product(id: "k1", name: "Learning Tablet", description: "Educational kids tablet", price: 2499, discountPrice: 1999, imageURL: "tablet", category: "Kids", isAvailable: true, isFeatured: true, weight: "500g", stockQuantity: 10),
-            Product(id: "k2", name: "Story Books Set", description: "Collection of children stories", price: 499, discountPrice: 399, imageURL: "storybooks", category: "Kids", isAvailable: true, isFeatured: true, weight: "300g", stockQuantity: 25),
-            Product(id: "k3", name: "Art Kit", description: "Complete drawing and coloring kit", price: 999, discountPrice: 799, imageURL: "artkit", category: "Kids", isAvailable: true, isFeatured: false, weight: "400g", stockQuantity: 15),
-            Product(id: "k4", name: "Kids T-Shirt", description: "Comfortable cotton t-shirt", price: 399, discountPrice: 299, imageURL: "kidstshirt", category: "Kids", isAvailable: true, isFeatured: false, weight: "100g", stockQuantity: 50),
-            Product(id: "k5", name: "Puzzle Game", description: "Brain development puzzle", price: 249, discountPrice: 199, imageURL: "puzzle", category: "Kids", isAvailable: true, isFeatured: true, weight: "200g", stockQuantity: 30),
-            Product(id: "k6", name: "Baby Lotion", description: "Gentle baby skin lotion", price: 199, discountPrice: 149, imageURL: "babylotion", category: "Kids", isAvailable: true, isFeatured: false, weight: "200ml", stockQuantity: 35)
-        ]
-    }
-    
-    // Grocery Products
-    private var groceryProducts: [Product] {
-        [
-            Product(id: "g1", name: "Fresh Bananas", description: "Organic ripe bananas", price: 59, discountPrice: 49, imageURL: "bananas", category: "Grocery", isAvailable: true, isFeatured: true, weight: "1kg", stockQuantity: 50),
-            Product(id: "g2", name: "Organic Milk", description: "Fresh organic cow milk", price: 99, discountPrice: 89, imageURL: "organicmilk", category: "Grocery", isAvailable: true, isFeatured: true, weight: "1L", stockQuantity: 40),
-            Product(id: "g3", name: "Bread Loaf", description: "Whole wheat bread loaf", price: 30, discountPrice: 25, imageURL: "bread", category: "Grocery", isAvailable: true, isFeatured: false, weight: "400g", stockQuantity: 60),
-            Product(id: "g4", name: "Rice Pack", description: "Premium basmati rice", price: 349, discountPrice: 299, imageURL: "rice", category: "Grocery", isAvailable: true, isFeatured: true, weight: "1kg", stockQuantity: 30),
-            Product(id: "g5", name: "Tea Bags", description: "Premium black tea bags", price: 179, discountPrice: 149, imageURL: "tea", category: "Grocery", isAvailable: true, isFeatured: false, weight: "100 bags", stockQuantity: 45),
-            Product(id: "g6", name: "Fresh Eggs", description: "Farm fresh brown eggs", price: 89, discountPrice: 79, imageURL: "eggs", category: "Grocery", isAvailable: true, isFeatured: true, weight: "12 pcs", stockQuantity: 70)
-        ]
-    }
-}
+// Note: All products now loaded from Firestore via HomeViewModel
+// No more hardcoded sample data needed
 
 #Preview {
     ProductListView(categoryTitle: "Cookies & Biscuits", categoryType: "banner")
