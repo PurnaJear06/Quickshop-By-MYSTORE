@@ -88,17 +88,38 @@ class UserViewModel: ObservableObject {
                     let finalFirstName = firstName.isEmpty && !legacyName.isEmpty ? legacyName.components(separatedBy: " ").first ?? "" : firstName
                     let finalLastName = lastName.isEmpty && !legacyName.isEmpty ? legacyName.components(separatedBy: " ").dropFirst().joined(separator: " ") : lastName
                     
+                    // Load addresses from Firestore
+                    var loadedAddresses: [Address] = []
+                    if let addressesData = data["addresses"] as? [[String: Any]] {
+                        loadedAddresses = addressesData.compactMap { addressDict in
+                            guard let id = addressDict["id"] as? String,
+                                  let title = addressDict["title"] as? String,
+                                  let fullAddress = addressDict["fullAddress"] as? String else {
+                                return nil
+                            }
+                            
+                            return Address(
+                                id: id,
+                                title: title,
+                                fullAddress: fullAddress,
+                                landmark: addressDict["landmark"] as? String,
+                                isDefault: addressDict["isDefault"] as? Bool ?? false
+                            )
+                        }
+                        print("✅ Loaded \(loadedAddresses.count) addresses from Firestore")
+                    }
+                    
                     self.currentUser = User(
                         id: firebaseUser.uid,
                         firstName: finalFirstName,
                         lastName: finalLastName,
                         email: data["email"] as? String ?? firebaseUser.email ?? "",
                         phone: data["phone"] as? String ?? firebaseUser.phoneNumber ?? "",
-                        addresses: [], // Will load addresses separately
+                        addresses: loadedAddresses,
                         profileImageURL: data["profileImageURL"] as? String
                     )
                     self.isLoggedIn = true
-                    print("User loaded successfully. IsLoggedIn: \(self.isLoggedIn)")
+                    print("✅ User loaded successfully. Name: \(finalFirstName) \(finalLastName), IsLoggedIn: \(self.isLoggedIn)")
                     self.loadOrders()
                 } else {
                     print("User document not found - creating new user")

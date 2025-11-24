@@ -104,7 +104,11 @@ struct ProfileView: View {
         }
         .navigationTitle("My Profile")
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear { syncNotificationToggleWithSystem() }
+        .onAppear {
+            syncNotificationToggleWithSystem()
+            // Reload user data to get latest addresses
+            userViewModel.checkAuthState()
+        }
         .alert("Enable notifications in Settings", isPresented: $showNotificationsDeniedAlert) {
             Button("Open Settings") { openAppSettings() }
             Button("Cancel", role: .cancel) { }
@@ -177,19 +181,25 @@ struct ProfileView: View {
                 
                 // User Info
                 VStack(spacing: 4) {
-                    Text("\(user.firstName) \(user.lastName)")
+                    // Display name - handle empty cases
+                    let displayName = user.fullName.isEmpty || user.fullName == "User" ? "Guest User" : user.fullName
+                    Text(displayName)
                         .font(.system(size: 22, weight: .bold))
                         .foregroundColor(.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                     
                     if !user.email.isEmpty {
                         Text(user.email)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
+                            .lineLimit(1)
                     }
                     if !user.phone.isEmpty {
                         Text(user.phone)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
+                            .lineLimit(1)
                     }
                 }
                 
