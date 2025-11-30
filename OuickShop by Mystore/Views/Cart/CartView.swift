@@ -4,6 +4,7 @@ struct CartView: View {
     // Environment objects
     @EnvironmentObject var cartViewModel: CartViewModel
     @EnvironmentObject var userViewModel: UserViewModel
+    @EnvironmentObject var homeViewModel: HomeViewModel
     
     // State
     @State private var showingCheckout = false
@@ -32,29 +33,56 @@ struct CartView: View {
             Color.gray.opacity(0.1).ignoresSafeArea()
             
             if cartViewModel.cartItems.isEmpty {
-                // Empty Cart View
-                VStack(spacing: 20) {
-                    Image(systemName: "cart")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 100, height: 100)
-                        .foregroundColor(.gray)
-                    
-                    Text("Your cart is empty")
-                        .font(.title2)
-                        .fontWeight(.medium)
-                    
-                    Text("Add items to get started")
-                        .font(.body)
-                        .foregroundColor(.gray)
-                    
-                    ConsistentButton.secondary(
-                        title: "Start Shopping",
-                        action: {
-                            goToTab(0)
+                // Empty Cart View with Trending Items
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Empty Cart Message
+                        VStack(spacing: 16) {
+                            Image(systemName: "cart")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 80, height: 80)
+                                .foregroundColor(.gray.opacity(0.6))
+                            
+                            Text("Your cart is empty")
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                            
+                            Text("Add items to get started")
+                                .font(.system(size: 14))
+                                .foregroundColor(.secondary)
+                            
+                            ConsistentButton.secondary(
+                                title: "Start Shopping",
+                                action: {
+                                    goToTab(0)
+                                }
+                            )
+                            .frame(width: 180, height: 44)
                         }
-                    )
-                    .frame(width: 200)
+                        .padding(.top, 40)
+                        
+                        // Trending Items Section
+                        if !homeViewModel.products.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Trending Products")
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundColor(.black)
+                                    .padding(.horizontal, 16)
+                                
+                                LazyVGrid(columns: [
+                                    GridItem(.flexible(), spacing: 12),
+                                    GridItem(.flexible(), spacing: 12)
+                                ], spacing: 12) {
+                                    ForEach(Array(homeViewModel.products.filter { $0.isFeatured }.prefix(6)), id: \.id) { product in
+                                        EmptyCartProductCard(product: product)
+                                    }
+                                }
+                                .padding(.horizontal, 16)
+                            }
+                        }
+                    }
+                    .padding(.bottom, 20)
                 }
             } else {
                 // Enhanced Cart Items View with modern layout
@@ -110,10 +138,9 @@ struct CartView: View {
         }
     }
     
-    // MARK: - Header View
+    // MARK: - Header View (Instamart Style)
     private var headerView: some View {
         VStack(spacing: 0) {
-            // Simple light gray header matching the screenshot
             HStack {
                 Button(action: {
                     goToTab(0)
@@ -123,8 +150,8 @@ struct CartView: View {
                         .foregroundColor(.black)
                 }
                 
-                Text("My Cart")
-                    .font(.headline)
+                Text("Your Cart")
+                    .font(.title3)
                     .fontWeight(.semibold)
                     .foregroundColor(.black)
                 
@@ -140,33 +167,34 @@ struct CartView: View {
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(Color(.systemGray6))
+            .padding(.vertical, 14)
+            .background(Color.white)
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(Color.gray.opacity(0.2)),
+                alignment: .bottom
+            )
         }
     }
     
-    // MARK: - Savings Banner
+    // MARK: - Savings Banner (Refined)
     private var savingsBanner: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(.green)
-                .font(.system(size: 20))
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Yay! You're saving ₹\(Int(totalSavings))")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.green)
-                
-                Text("on this order")
-                    .font(.system(size: 13))
-                    .foregroundColor(.green.opacity(0.8))
-            }
-            
+        HStack(spacing: 0) {
+            Spacer()
+            Text("You are saving ₹\(Int(totalSavings)) on this order!")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
             Spacer()
         }
-        .padding(16)
-        .background(Color.green.opacity(0.1))
-        .cornerRadius(12)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color("primaryGreen").opacity(0.90))
+                .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 1)
+        )
     }
     
     // MARK: - Cart Items Section
@@ -182,48 +210,48 @@ struct CartView: View {
         }
     }
     
-    // MARK: - Tipping Section
+    // MARK: - Tipping Section (Compact)
     private var tippingSection: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
             HStack {
                 Text("Say thanks with a tip")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.black)
                 
                 Spacer()
                 
                 Image(systemName: "info.circle")
                     .foregroundColor(.gray)
-                    .font(.system(size: 16))
+                    .font(.system(size: 14))
             }
             
-            Text("A small tip, a big gesture! Tip your delivery partner to show appreciation for their hard work.")
-                .font(.system(size: 14))
+            Text("Show appreciation for their hard work")
+                .font(.system(size: 13))
                 .foregroundColor(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
             
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 ForEach(tipOptions, id: \.self) { amount in
                     Button(action: {
                         selectedTipAmount = amount
                     }) {
-                        VStack(spacing: 6) {
+                        VStack(spacing: 4) {
                             Text("₹\(amount)")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(selectedTipAmount == amount ? .white : .black)
                             
                             if amount == defaultTipOption {
                                 Text("Most tipped")
-                                    .font(.system(size: 11, weight: .medium))
+                                    .font(.system(size: 10, weight: .medium))
                                     .foregroundColor(selectedTipAmount == amount ? .white.opacity(0.9) : .blue)
                             }
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 18)
+                        .padding(.vertical, 14)
                         .background(selectedTipAmount == amount ? Color.blue : Color.white)
-                        .cornerRadius(12)
+                        .cornerRadius(10)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 12)
+                            RoundedRectangle(cornerRadius: 10)
                                 .stroke(selectedTipAmount == amount ? Color.blue : Color.gray.opacity(0.2), lineWidth: 1.5)
                         )
                     }
@@ -234,39 +262,41 @@ struct CartView: View {
                     customTipInput = isCustom ? String(selectedTipAmount!) : ""
                     showingCustomTip = true
                 }) {
-                    VStack(spacing: 6) {
+                    VStack(spacing: 4) {
                         Text(isCustom ? "₹\(selectedTipAmount!)" : "Other")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(isCustom ? .white : .black)
                         if isCustom {
                             Text("Custom")
-                                .font(.system(size: 11, weight: .medium))
+                                .font(.system(size: 10, weight: .medium))
                                 .foregroundColor(.white.opacity(0.9))
                         }
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 18)
+                    .padding(.vertical, 14)
                     .background(isCustom ? Color.blue : Color.white)
-                    .cornerRadius(12)
+                    .cornerRadius(10)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: 10)
                             .stroke(isCustom ? Color.blue : Color.gray.opacity(0.2), lineWidth: 1.5)
                     )
                 }
             }
             
+            // Optional tip skip button
             if selectedTipAmount != nil {
-                Button(action: { selectedTipAmount = nil }) {
-                    Text("Remove tip")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.blue)
+                Button(action: {
+                    selectedTipAmount = nil
+                }) {
+                    Text("Skip tip")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
                 }
             }
         }
-        .padding(20)
+        .padding(14)
         .background(Color.white)
-        .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+        .cornerRadius(10)
     }
     
     // MARK: - Promo Code Section
@@ -309,58 +339,48 @@ struct CartView: View {
         .cornerRadius(12)
     }
     
-    // MARK: - Bill Details Section
+    // MARK: - Bill Details Section (Refined)
     private var billDetailsSection: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 14) {
             Text("Bill Details")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(.black)
                 .frame(maxWidth: .infinity, alignment: .leading)
             
             VStack(spacing: 14) {
                 billRow(title: "Item Total", value: cartViewModel.subtotal, originalValue: nil)
-                billRow(title: "Delivery Fee", value: cartViewModel.deliveryFee, originalValue: nil)
-                
-                if selectedTipAmount != nil {
-                    billRow(title: "Delivery Tip", value: Double(selectedTipAmount!), originalValue: nil)
-                } else {
-                    HStack {
-                        Text("Delivery Tip")
-                            .font(.system(size: 15))
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        Button(action: {
-                            selectedTipAmount = defaultTipOption
-                        }) {
-                            Text("Add a tip")
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundColor(.blue)
-                        }
-                    }
-                }
                 
                 HStack {
                     Text("Delivery Partner Fee")
-                        .font(.system(size: 15))
+                        .font(.system(size: 14))
                         .foregroundColor(.secondary)
                     
                     Spacer()
                     
-                    Text("₹16.00")
-                        .font(.system(size: 15))
+                    Text("₹25.00")
+                        .font(.system(size: 14))
                         .strikethrough()
                         .foregroundColor(.gray)
                     
-                    Text("FREE")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.red)
+                    HStack(spacing: 3) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 11))
+                            .foregroundColor(Color("primaryGreen"))
+                        Text("Free")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(Color("primaryGreen"))
+                    }
                 }
                 
-                billRow(title: "GST and Charges", value: cartViewModel.gst, originalValue: nil)
+                if selectedTipAmount != nil {
+                    billRow(title: "Delivery Tip", value: Double(selectedTipAmount!), originalValue: nil)
+                }
+                
+                billRow(title: "Taxes & Charges", value: cartViewModel.gst, originalValue: nil)
             }
             
             Divider()
-                .padding(.vertical, 4)
+                .padding(.vertical, 6)
             
             HStack {
                 Text("To Pay")
@@ -369,96 +389,73 @@ struct CartView: View {
                 
                 Spacer()
                 
-                if totalSavings > 0 {
-                    Text("₹\(cartViewModel.total + totalSavings, specifier: "%.2f")")
-                        .font(.system(size: 15))
-                        .strikethrough()
-                        .foregroundColor(.gray)
-                        .padding(.trailing, 8)
-                }
-                
                 let totalWithTip = cartViewModel.total + Double(selectedTipAmount ?? 0)
-                Text("₹\(totalWithTip, specifier: "%.2f")")
+                Text("₹\(totalWithTip, specifier: "%.0f")")
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.black)
             }
         }
-        .padding(20)
-        .background(Color(.systemGray6))
+        .padding(18)
+        .background(Color.white)
         .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 1)
     }
     
     // MARK: - Helper for Bill Row
     private func billRow(title: String, value: Double, originalValue: Double?) -> some View {
         HStack {
             Text(title)
-                .font(.body)
+                .font(.system(size: 14))
                 .foregroundColor(.secondary)
             
             Spacer()
             
             if let original = originalValue {
                 Text("₹\(original, specifier: "%.2f")")
-                    .font(.body)
+                    .font(.system(size: 14))
                     .strikethrough()
                     .foregroundColor(.gray)
-                    .padding(.trailing, 8)
+                    .padding(.trailing, 6)
             }
             
             Text("₹\(value, specifier: "%.2f")")
-                .font(.body)
+                .font(.system(size: 14))
         }
     }
     
-    // MARK: - Cancellation Policy Section
+    // MARK: - Cancellation Policy Section (Refined)
     private var cancellationPolicySection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             Text("NOTE:")
-                .font(.subheadline)
-                .fontWeight(.bold)
+                .font(.system(size: 13, weight: .bold))
                 .foregroundColor(.red)
             
             Text("Orders cannot be cancelled and are non-refundable once packed for delivery.")
-                .font(.subheadline)
+                .font(.system(size: 12))
                 .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             
             Button(action: {
                 // Show cancellation policy
             }) {
                 Text("Read cancellation policy")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundColor(Color("primaryBlue"))
             }
         }
-        .padding(16)
+        .padding(12)
         .background(Color.white)
-        .cornerRadius(12)
+        .cornerRadius(10)
     }
     
-    // MARK: - Checkout Button Section
+    // MARK: - Checkout Button Section (Refined)
     private var checkoutButtonSection: some View {
         VStack(spacing: 0) {
-            Divider()
+            Rectangle()
+                .fill(Color.gray.opacity(0.15))
+                .frame(height: 1)
             
-            HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 4) {
-                    let totalWithTip = cartViewModel.total + Double(selectedTipAmount ?? 0)
-                    Text("₹\(totalWithTip, specifier: "%.2f")")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundColor(.black)
-                    
-                    Button(action: {
-                        showingDetailedBill = true
-                    }) {
-                        Text("View Detailed Bill")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.blue)
-                    }
-                }
-                
-                Spacer()
-                
+            VStack(spacing: 0) {
                 Button(action: {
                     if userViewModel.isLoggedIn {
                         if let defaultAddress = userViewModel.currentUser?.addresses.first(where: { $0.isDefault }) {
@@ -471,23 +468,29 @@ struct CartView: View {
                         goToTab(3)
                     }
                 }) {
-                    Text(userViewModel.isLoggedIn ? "Proceed to Pay" : "Login to Continue")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 32)
-                        .padding(.vertical, 18)
-                        .background(Color.red)
-                        .cornerRadius(12)
+                    HStack {
+                        Spacer()
+                        let totalWithTip = cartViewModel.total + Double(selectedTipAmount ?? 0)
+                        Text(userViewModel.isLoggedIn ? "Proceed to Pay ₹\(Int(totalWithTip))" : "Login to Continue")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
+                        Spacer()
+                    }
+                    .padding(.vertical, 16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color("primaryGreen").opacity(0.95))
+                    )
                 }
+                .padding(.horizontal, 16)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 16)
-            .padding(.bottom, max(16, UIApplication.shared.connectedScenes
+            .padding(.top, 14)
+            .padding(.bottom, max(14, UIApplication.shared.connectedScenes
                 .compactMap { $0 as? UIWindowScene }
-                .first?.windows.first?.safeAreaInsets.bottom ?? 16))
+                .first?.windows.first?.safeAreaInsets.bottom ?? 14))
         }
         .background(Color.white)
-        .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: -5)
+        .shadow(color: Color.black.opacity(0.06), radius: 6, x: 0, y: -1)
     }
     
     private func deleteItems(at offsets: IndexSet) {
@@ -520,71 +523,39 @@ struct CartItemRow: View {
     @State private var itemOffset: CGFloat = 0
     
     var body: some View {
-        HStack(alignment: .center, spacing: 16) {
-            // Product Image - LARGER & MODERN
+        HStack(alignment: .top, spacing: 10) {
+            // Product Image (Very Compact)
             ZStack {
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 8)
                     .fill(Color(.systemGray6))
-                    .frame(width: 80, height: 80)
+                    .frame(width: 50, height: 50)
                 
                 Image(systemName: CategoryIconMap.iconName(for: item.product.category))
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 40, height: 40)
+                    .frame(width: 28, height: 28)
                     .foregroundColor(Color(CategoryIconMap.colorName(for: item.product.category)))
             }
             
-            // Product Details - BETTER TYPOGRAPHY
-            VStack(alignment: .leading, spacing: 6) {
+            // Product Details (Left Side Only - No Price)
+            VStack(alignment: .leading, spacing: 2) {
                 Text(item.product.name)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .lineLimit(2)
                     .foregroundColor(.black)
                 
                 Text(item.product.weight)
-                    .font(.system(size: 14))
+                    .font(.system(size: 11))
                     .foregroundColor(.secondary)
-                
-                // Price Display - MODERN LAYOUT
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text("₹\(Int(item.product.price))")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.black)
-                    
-                    if let mrp = item.product.mrp, mrp > item.product.price {
-                        Text("₹\(Int(mrp))")
-                            .font(.system(size: 14))
-                            .strikethrough()
-                            .foregroundColor(.gray)
-                        
-                        let percentage = ((mrp - item.product.price) / mrp) * 100
-                        Text("\(Int(percentage))% OFF")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(.green)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.green.opacity(0.1))
-                            .cornerRadius(4)
-                    }
-                }
             }
             
-            Spacer()
+            Spacer(minLength: 8)
             
-            // Quantity Controls - LARGER & MORE ACCESSIBLE
-            VStack(spacing: 12) {
-                // Delete button - CLEANER
-                Button(action: {
-                    showDeleteAlert = true
-                }) {
-                    Image(systemName: "trash")
-                        .font(.system(size: 16))
-                        .foregroundColor(.red)
-                }
-                
-                // Quantity Controls - BIGGER TOUCH TARGETS
+            // Right Column: Quantity + Price + Delete (Grouped)
+            VStack(alignment: .trailing, spacing: 6) {
+                // Quantity Controls (Compact)
                 HStack(spacing: 0) {
-                    // Decrement Button
+                    // Decrement
                     Button(action: {
                         guard !isDecrementProcessing, item.quantity > 1 else { return }
                         isDecrementProcessing = true
@@ -607,24 +578,24 @@ struct CartItemRow: View {
                         }
                     }) {
                         Image(systemName: "minus")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 10, weight: .semibold))
                             .foregroundColor(item.quantity <= 1 ? .gray : .green)
-                            .frame(width: 36, height: 36)
+                            .frame(width: 26, height: 26)
                             .background(Color(.systemGray6))
-                            .cornerRadius(8, corners: [.topLeft, .bottomLeft])
+                            .cornerRadius(5, corners: [.topLeft, .bottomLeft])
                     }
                     .disabled(item.quantity <= 1 || isDecrementProcessing)
                     
                     // Quantity Display
                     Text("\(item.quantity)")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.black)
-                        .frame(width: 40, height: 36)
+                        .frame(width: 28, height: 26)
                         .background(Color.white)
                         .scaleEffect(quantityScale)
                         .animation(.spring(response: 0.2, dampingFraction: 0.6), value: item.quantity)
                     
-                    // Increment Button
+                    // Increment
                     Button(action: {
                         guard !isIncrementProcessing, item.quantity < item.product.stockQuantity else { return }
                         isIncrementProcessing = true
@@ -647,27 +618,59 @@ struct CartItemRow: View {
                         }
                     }) {
                         Image(systemName: "plus")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 10, weight: .semibold))
                             .foregroundColor(.green)
-                            .frame(width: 36, height: 36)
+                            .frame(width: 26, height: 26)
                             .background(Color(.systemGray6))
-                            .cornerRadius(8, corners: [.topRight, .bottomRight])
+                            .cornerRadius(5, corners: [.topRight, .bottomRight])
                     }
                     .disabled(item.quantity >= item.product.stockQuantity || isIncrementProcessing)
                 }
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 5)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 0.5)
                 )
+                
+                // Price Display (Right side)
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("₹\(Int(item.product.price))")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.black)
+                    
+                    if let mrp = item.product.mrp, mrp > item.product.price {
+                        Text("₹\(Int(mrp))")
+                            .font(.system(size: 11))
+                            .strikethrough()
+                            .foregroundColor(.gray)
+                        
+                        let percentage = ((mrp - item.product.price) / mrp) * 100
+                        Text("\(Int(percentage))% OFF")
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundColor(.green)
+                            .padding(.horizontal, 3)
+                            .padding(.vertical, 1)
+                            .background(Color.green.opacity(0.1))
+                            .cornerRadius(3)
+                    }
+                }
+                
+                // Delete button (bottom-right)
+                Button(action: {
+                    showDeleteAlert = true
+                }) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 12))
+                        .foregroundColor(.gray.opacity(0.5))
+                }
             }
         }
-        .padding(20)
+        .padding(10)
         .background(Color.white)
-        .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .cornerRadius(10)
+        .shadow(color: Color.black.opacity(0.02), radius: 3, x: 0, y: 1)
         .offset(x: itemOffset)
         .padding(.horizontal, 0)
-        .padding(.vertical, 6)
+        .padding(.vertical, 4)
         .alert("Remove Item", isPresented: $showDeleteAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Remove", role: .destructive) {
@@ -920,3 +923,85 @@ struct CustomTipSheet: View {
         .environmentObject(CartViewModel())
         .environmentObject(UserViewModel())
 } 
+// MARK: - Empty Cart Product Card
+struct EmptyCartProductCard: View {
+    let product: Product
+    @EnvironmentObject var cartViewModel: CartViewModel
+    @State private var isAdding = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Product Image
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color(.systemGray6))
+                    .frame(height: 120)
+                
+                Image(systemName: CategoryIconMap.iconName(for: product.category))
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 50, height: 50)
+                    .foregroundColor(Color(CategoryIconMap.colorName(for: product.category)))
+            }
+            
+            // Product Name
+            Text(product.name)
+                .font(.system(size: 13, weight: .medium))
+                .lineLimit(2)
+                .foregroundColor(.black)
+                .frame(height: 34, alignment: .top)
+            
+            // Price
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text("₹\\(Int(product.price))")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.black)
+                
+                if let mrp = product.mrp, mrp > product.price {
+                    Text("₹\\(Int(mrp))")
+                        .font(.system(size: 11))
+                        .strikethrough()
+                        .foregroundColor(.gray)
+                }
+            }
+            
+            // Add Button
+            Button(action: {
+                withAnimation {
+                    isAdding = true
+                }
+                cartViewModel.addToCart(product: product, quantity: 1)
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    withAnimation {
+                        isAdding = false
+                    }
+                }
+            }) {
+                HStack {
+                    Spacer()
+                    if isAdding {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(0.8)
+                    } else {
+                        Image(systemName: "plus")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("ADD")
+                            .font(.system(size: 12, weight: .bold))
+                    }
+                    Spacer()
+                }
+                .foregroundColor(.white)
+                .frame(height: 32)
+                .background(Color("primaryGreen"))
+                .cornerRadius(6)
+            }
+            .disabled(isAdding)
+        }
+        .padding(10)
+        .background(Color.white)
+        .cornerRadius(10)
+        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 1)
+    }
+}

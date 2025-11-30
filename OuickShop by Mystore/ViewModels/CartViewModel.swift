@@ -67,27 +67,39 @@ class CartViewModel: ObservableObject {
             let newQuantity = min(currentItem.quantity + quantity, currentItem.product.stockQuantity)
             
             var newCartItems = cartItems
-            newCartItems[index] = CartItem(
-                id: currentItem.id,
-                product: currentItem.product,
-                quantity: newQuantity
-            )
+            
+            if newQuantity > 0 {
+                newCartItems[index] = CartItem(
+                    id: currentItem.id,
+                    product: currentItem.product,
+                    quantity: newQuantity
+                )
+                print("✅ Updated existing item quantity to: \(newQuantity)")
+            } else {
+                newCartItems.remove(at: index)
+                print("🗑️ Removed item because quantity became 0")
+            }
             
             DispatchQueue.main.async {
                 self.cartItems = newCartItems
-                print("✅ Updated existing item quantity to: \(newQuantity)")
             }
         } else {
             // Add new item
-            let cartItem = CartItem(
-                id: UUID().uuidString, 
-                product: product, 
-                quantity: min(quantity, product.stockQuantity)
-            )
+            let validQuantity = min(quantity, product.stockQuantity)
             
-            DispatchQueue.main.async {
-                self.cartItems.append(cartItem)
-                print("✅ Added new item to cart: \(product.name)")
+            if validQuantity > 0 {
+                let cartItem = CartItem(
+                    id: UUID().uuidString, 
+                    product: product, 
+                    quantity: validQuantity
+                )
+                
+                DispatchQueue.main.async {
+                    self.cartItems.append(cartItem)
+                    print("✅ Added new item to cart: \(product.name)")
+                }
+            } else {
+                print("❌ Cannot add item: Stock is 0 or requested quantity is 0")
             }
         }
     }
@@ -103,11 +115,15 @@ class CartViewModel: ObservableObject {
             let currentItem = cartItems[index]
             let newQuantity = min(currentItem.quantity + quantity, currentItem.product.stockQuantity)
             
-            cartItems[index] = CartItem(
-                id: currentItem.id,
-                product: currentItem.product,
-                quantity: newQuantity
-            )
+            if newQuantity > 0 {
+                cartItems[index] = CartItem(
+                    id: currentItem.id,
+                    product: currentItem.product,
+                    quantity: newQuantity
+                )
+            } else {
+                cartItems.remove(at: index)
+            }
         } else {
             // Create a mock product for the cart item
             let mockProduct = Product(
@@ -126,8 +142,11 @@ class CartViewModel: ObservableObject {
             )
             
             // Add new item
-            let cartItem = CartItem(id: UUID().uuidString, product: mockProduct, quantity: quantity)
-            cartItems.append(cartItem)
+            let validQuantity = min(quantity, mockProduct.stockQuantity)
+            if validQuantity > 0 {
+                let cartItem = CartItem(id: UUID().uuidString, product: mockProduct, quantity: validQuantity)
+                cartItems.append(cartItem)
+            }
         }
     }
     
