@@ -333,13 +333,14 @@ struct KidsContentView: View {
                         name: product.name,
                         description: "Kids special item",
                         price: Double(product.originalPrice),
-                        discountPrice: Double(product.price),
+                        mrp: Double(product.price) * 2,
                         imageURL: "",
                         category: "Kids",
                         isAvailable: true,
                         isFeatured: true,
                         weight: "1 unit",
-                        stockQuantity: 100  // Increased from 10 to 100
+                        stockQuantity: 100,  // Increased from 10 to 100
+                        gst: 12.0  // Kids products typically have 12% GST
                     )
                     
                     cartViewModel.addToCart(product: mockProduct)

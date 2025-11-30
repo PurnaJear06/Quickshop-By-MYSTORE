@@ -370,13 +370,14 @@ struct BeautyContentView: View {
                         name: product.name,
                         description: "Beauty special item",
                         price: Double(product.originalPrice),
-                        discountPrice: Double(product.price),
+                        mrp: Double(product.price) * 2,
                         imageURL: "",
                         category: "Beauty",
                         isAvailable: true,
                         isFeatured: true,
                         weight: "1 unit",
-                        stockQuantity: 100  // Increased from 10 to 100
+                        stockQuantity: 100,  // Increased from 10 to 100
+                        gst: 18.0  // Beauty products typically have 18% GST
                     )
                     
                     cartViewModel.addToCart(product: mockProduct)

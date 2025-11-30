@@ -314,19 +314,22 @@ struct SearchResultRow: View {
                         .foregroundColor(.gray)
                     
                     HStack(spacing: 8) {
-                        if let discountPrice = product.discountPrice {
-                            Text("₹\(Int(discountPrice))")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.black)
-                            
-                            Text("₹\(Int(product.price))")
-                                .font(.system(size: 12))
-                                .strikethrough()
-                                .foregroundColor(.gray)
-                        } else {
-                            Text("₹\(Int(product.price))")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.black)
+                        // Price display
+                        VStack(alignment: .leading, spacing: 2) {
+                            if let mrp = product.mrp, mrp > product.price {
+                                Text("₹\(Int(mrp))")
+                                    .font(.caption)
+                                    .strikethrough()
+                                    .foregroundColor(.gray)
+                                Text("₹\(Int(product.price))")
+                                    .font(.headline)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.green)
+                            } else {
+                                Text("₹\(Int(product.price))")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.black)
+                            }
                         }
                     }
                 }

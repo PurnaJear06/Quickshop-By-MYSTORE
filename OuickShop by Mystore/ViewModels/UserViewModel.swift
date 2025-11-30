@@ -18,13 +18,14 @@ class UserViewModel: ObservableObject {
     
     private var db = Firestore.firestore()
     private var cancellables = Set<AnyCancellable>()
+    private var authStateHandle: AuthStateDidChangeListenerHandle?
     
     init() {
         // Check current authentication state
         checkAuthState()
         
         // Listen for auth state changes
-        Auth.auth().addStateDidChangeListener { [weak self] _, user in
+        authStateHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
             DispatchQueue.main.async {
                 self?.authUser = user
                 if user != nil {

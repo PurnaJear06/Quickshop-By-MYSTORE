@@ -65,21 +65,35 @@ struct ProductDetailView: View {
                             }
                         }
                         
-                        // Price
+                        // Price with MRP
                         HStack(alignment: .firstTextBaseline) {
-                            if let discountPrice = product.discountPrice {
-                                Text("₹\(discountPrice, specifier: "%.2f")")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
+                            VStack(alignment: .leading, spacing: 4) {
+                                // MRP with strikethrough
+                                if let mrp = product.mrp, mrp > product.price {
+                                    Text("₹\(Int(mrp))")
+                                        .font(.title3)
+                                        .strikethrough()
+                                        .foregroundColor(.gray)
+                                }
                                 
-                                Text("₹\(product.price, specifier: "%.2f")")
-                                    .font(.subheadline)
-                                    .strikethrough()
-                                    .foregroundColor(.gray)
-                            } else {
-                                Text("₹\(product.price, specifier: "%.2f")")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
+                                HStack(spacing: 8) {
+                                    // Current price
+                                    Text("₹\(product.price, specifier: "%.2f")")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.green)
+                                    
+                                    // Discount badge
+                                    if let discount = product.discountPercentage {
+                                        Text("\(discount)% OFF")
+                                            .font(.caption)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Color.green)
+                                            .foregroundColor(.white)
+                                            .cornerRadius(4)
+                                    }
+                                }
                             }
                             
                             Spacer()
@@ -163,7 +177,7 @@ struct ProductDetailView: View {
                             
                             Spacer()
                             
-                            Text("₹\((product.discountPrice ?? product.price) * Double(quantity), specifier: "%.2f")")
+                            Text("₹\(product.price * Double(quantity), specifier: "%.2f")")
                                 .font(.headline)
                         }
                         .padding(.top, 8)
@@ -185,7 +199,7 @@ struct ProductDetailView: View {
                             .font(.subheadline)
                             .foregroundColor(.gray)
                         
-                        Text("₹\((product.discountPrice ?? product.price) * Double(quantity), specifier: "%.2f")")
+                        Text("₹\(product.price * Double(quantity), specifier: "%.2f")")
                             .font(.headline)
                     }
                     

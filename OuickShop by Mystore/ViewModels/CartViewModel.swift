@@ -10,17 +10,18 @@ class CartViewModel: ObservableObject {
     @Published var promoCode: String = ""
     @Published var isPromoApplied: Bool = false
     
-    // GST rate (5%)
-    let gstRate: Double = 0.05
-    
-    // Calculate GST amount
+    // Calculate GST amount from products
     var gst: Double {
-        return subtotal * gstRate
+        return cartItems.reduce(0.0) { total, item in
+            let itemPrice = item.product.price * Double(item.quantity)
+            let itemGST = (itemPrice * item.product.gst) / 100.0
+            return total + itemGST
+        }
     }
     
-    // Total amount to pay (now includes GST)
+    // Total amount to pay (now includes GST from products)
     var total: Double {
-        subtotal + deliveryFee + gst - discount
+        return subtotal + deliveryFee + gst - discount
     }
     
     // Cancellables for Combine
@@ -114,13 +115,14 @@ class CartViewModel: ObservableObject {
                 name: name,
                 description: "Added from Quick Shop",
                 price: priceValue,
-                discountPrice: nil,
+                mrp: nil,
                 imageURL: "",
                 category: "Summer",
                 isAvailable: true,
                 isFeatured: false,
                 weight: "1 unit",
-                stockQuantity: 100  // Increased from 10 to 100 to allow higher quantities
+                stockQuantity: 100,  // Increased from 10 to 100 to allow higher quantities
+                gst: 5.0  // Default 5% GST
             )
             
             // Add new item

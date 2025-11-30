@@ -6,7 +6,7 @@ struct CartItem: Identifiable, Equatable {
     var quantity: Int
     
     var totalPrice: Double {
-        let pricePerUnit = product.discountPrice ?? product.price
+        let pricePerUnit = product.price
         return pricePerUnit * Double(quantity)
     }
     

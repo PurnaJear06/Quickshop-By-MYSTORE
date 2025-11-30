@@ -293,13 +293,14 @@ struct SummerContentView: View {
                         name: product.name,
                         description: "Summer special item",
                         price: Double(product.originalPrice),
-                        discountPrice: Double(product.price),
+                        mrp: Double(product.price) * 2,
                         imageURL: "",
                         category: "Summer",
                         isAvailable: true,
                         isFeatured: true,
                         weight: "1 unit",
-                        stockQuantity: 100  // Increased from 10 to 100
+                        stockQuantity: 100,  // Increased from 10 to 100
+                        gst: 12.0  // Summer products typically have 12% GST
                     )
                     
                     cartViewModel.addToCart(product: mockProduct)

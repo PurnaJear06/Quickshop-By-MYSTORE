@@ -119,7 +119,7 @@ struct ProfileView: View {
     
     // Profile Header (modern card)
     private func profileHeader(user: User) -> some View {
-        ZStack(alignment: .topTrailing) {
+        ZStack {
             // Card background with subtle gradient and soft shadow
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(
@@ -130,33 +130,22 @@ struct ProfileView: View {
                     )
                 )
                 .shadow(color: Color.black.opacity(0.06), radius: 10, x: 0, y: 6)
-                .overlay(
-                    // Decorative glow bubbles (subtle) - centered for better balance
-                    ZStack {
-                        Circle()
-                            .fill(Color("primaryYellow").opacity(0.15))
-                            .frame(width: 140, height: 140)
-                            .blur(radius: 35)
-                            .offset(x: 40, y: -10)
-                        Circle()
-                            .fill(Color("secondaryOrange").opacity(0.1))
-                            .frame(width: 110, height: 110)
-                            .blur(radius: 30)
-                            .offset(x: -40, y: 10)
-                    }
-                )
             
-            // Top-right pencil quick action
-            Button(action: { showingEditProfileSheet = true }) {
-                Image(systemName: "pencil")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.primary)
-                    .padding(8)
-                    .background(.ultraThinMaterial)
-                    .clipShape(Circle())
-            }
-            .padding(12)
+            // Decorative glow bubbles (subtle) - centered behind content
+            // These are positioned in the CENTER of the card for balanced aesthetics
+            Circle()
+                .fill(Color("primaryYellow").opacity(0.10))
+                .frame(width: 100, height: 100)
+                .blur(radius: 25)
+                .offset(x: 0, y: -30)  // Slightly above center, behind avatar
             
+            Circle()
+                .fill(Color("secondaryOrange").opacity(0.08))
+                .frame(width: 80, height: 80)
+                .blur(radius: 20)
+                .offset(x: 0, y: 30)   // Slightly below center
+            
+            // Content layer
             VStack(spacing: 12) {
                 // Avatar with gradient ring
                 ZStack {
@@ -224,6 +213,23 @@ struct ProfileView: View {
                 .padding(.top, 4)
             }
             .padding(20)
+            
+            // Top-right pencil edit button overlay
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: { showingEditProfileSheet = true }) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.primary)
+                            .padding(8)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Circle())
+                    }
+                    .padding(12)
+                }
+                Spacer()
+            }
         }
         .padding(.horizontal)
         .padding(.top, 16)
@@ -753,7 +759,7 @@ struct OrderDetailView: View {
                             
                         // Item price & quantity
                         VStack(alignment: .trailing, spacing: 4) {
-                            Text("₹\(item.product.discountPrice ?? item.product.price, specifier: "%.2f")")
+                            Text("₹\(item.product.price, specifier: "%.2f")")
                                 .font(.subheadline)
                                 .fontWeight(.medium)
                             

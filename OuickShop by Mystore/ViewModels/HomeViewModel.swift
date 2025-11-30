@@ -86,13 +86,14 @@ class HomeViewModel: ObservableObject {
                             name: name,
                             description: data["description"] as? String ?? "",
                             price: data["price"] as? Double ?? 0.0,
-                            discountPrice: data["discountPrice"] as? Double,
+                            mrp: data["mrp"] as? Double,
                             imageURL: data["imageURL"] as? String ?? "",
                             category: category,
                             isAvailable: data["isAvailable"] as? Bool ?? true,
                             isFeatured: data["isFeatured"] as? Bool ?? false,
                             weight: data["weight"] as? String ?? "1pc",
-                            stockQuantity: data["stockQuantity"] as? Int ?? 0
+                            stockQuantity: data["stockQuantity"] as? Int ?? 0,
+                            gst: data["gst"] as? Double ?? 5.0  // Default to 5% if not specified
                         )
                     }
                     

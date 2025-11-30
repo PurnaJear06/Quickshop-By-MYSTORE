@@ -20,14 +20,21 @@ struct ProductListView: View {
     
     // Products data based on category from Firestore
     private var categoryProducts: [Product] {
-        // Filter products from HomeViewModel based on category
-        let normalizedCategoryTitle = categoryTitle.lowercased()
+        // TEMPORARY: Show ALL products for testing - remove category filtering
+        // TODO: Re-enable category filtering after updating Firestore product categories
         
-        // If no products loaded yet, return empty
         guard !homeViewModel.products.isEmpty else {
             print("⚠️ No products available in HomeViewModel")
             return []
         }
+        
+        print("📦 Category '\(categoryTitle)': Showing ALL \(homeViewModel.products.count) products (category filter temporarily disabled for testing)")
+        
+        // Return ALL products for now
+        return homeViewModel.products
+        
+        /* ORIGINAL CATEGORY FILTERING CODE - COMMENTED OUT FOR TESTING
+        let normalizedCategoryTitle = categoryTitle.lowercased()
         
         let filtered = homeViewModel.products.filter { product in
             let normalizedProductCategory = product.category.lowercased()
@@ -51,7 +58,6 @@ struct ProductListView: View {
                 matches = normalizedProductCategory.contains("snack") || normalizedProductCategory.contains("munchies")
             default:
                 // For any other category, use flexible partial matching
-                // Check if either contains the other (more lenient)
                 matches = normalizedProductCategory.contains(normalizedCategoryTitle) || 
                          normalizedCategoryTitle.contains(normalizedProductCategory) ||
                          normalizedProductCategory.split(separator: " ").contains(where: { normalizedCategoryTitle.contains($0) }) ||
@@ -63,6 +69,7 @@ struct ProductListView: View {
         
         print("📦 Category '\(categoryTitle)': Found \(filtered.count) products out of \(homeViewModel.products.count) total")
         return filtered
+        */
     }
     
     // Filtered and sorted products
@@ -80,14 +87,14 @@ struct ProductListView: View {
         // Apply price filter
         if selectedFilters.priceRange.upperBound < 1000 {
             products = products.filter { product in
-                let price = product.discountPrice ?? product.price
+                let price = product.price
                 return price >= selectedFilters.priceRange.lowerBound && price <= selectedFilters.priceRange.upperBound
             }
         }
         
         // Apply discount filter
         if selectedFilters.showDiscountedOnly {
-            products = products.filter { $0.discountPrice != nil }
+            products = products.filter { $0.mrp != nil && $0.mrp! > $0.price }
         }
         
         // Apply availability filter
@@ -273,9 +280,9 @@ struct ProductListView: View {
         case .popularity:
             return products.sorted { $0.isFeatured && !$1.isFeatured }
         case .priceLowToHigh:
-            return products.sorted { ($0.discountPrice ?? $0.price) < ($1.discountPrice ?? $1.price) }
+            return products.sorted { $0.price < $1.price }
         case .priceHighToLow:
-            return products.sorted { ($0.discountPrice ?? $0.price) > ($1.discountPrice ?? $1.price) }
+            return products.sorted { $0.price > $1.price }
         case .discount:
             return products.sorted { 
                 let discount1 = $0.discountPercentage ?? 0
@@ -514,22 +521,16 @@ struct ProductListCard: View {
             // Price and Add Button Section - Outside NavigationLink
                 HStack(alignment: .center, spacing: 8) {
                     VStack(alignment: .leading, spacing: 2) {
-                    if let discountPrice = product.discountPrice {
-                            HStack(spacing: 4) {
-                        Text("₹\(Int(discountPrice))")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.black)
-                        
-                        Text("₹\(Int(product.price))")
-                                    .font(.system(size: 11))
-                            .strikethrough()
-                            .foregroundColor(.gray)
-                            }
-                    } else {
-                        Text("₹\(Int(product.price))")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.black)
+                        if let mrp = product.mrp, mrp > product.price {
+                            Text("₹\(Int(mrp))")
+                                .font(.caption)
+                                .strikethrough()
+                                .foregroundColor(.gray)
                         }
+                        Text("₹\(Int(product.price))")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .foregroundColor(Color("primaryGreen"))
                     }
                     
                     Spacer()

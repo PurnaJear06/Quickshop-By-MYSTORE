@@ -19,9 +19,9 @@ struct CartView: View {
     
     // Total savings calculation
     private var totalSavings: Double {
-        return cartViewModel.cartItems.reduce(0) { total, item in
-            if let discountPrice = item.product.discountPrice {
-                return total + ((item.product.price - discountPrice) * Double(item.quantity))
+        return cartViewModel.cartItems.reduce(0.0) { total, item in
+            if let mrp = item.product.mrp {
+                return total + ((mrp - item.product.price) * Double(item.quantity))
             }
             return total
         }
@@ -147,34 +147,26 @@ struct CartView: View {
     
     // MARK: - Savings Banner
     private var savingsBanner: some View {
-        HStack {
-            Text("Saved")
-                .font(.headline)
-                .foregroundColor(.black)
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(.green)
+                .font(.system(size: 20))
             
-            ZStack {
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color("primaryRed"))
-                    .frame(height: 28)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Yay! You're saving ₹\(Int(totalSavings))")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.green)
                 
-                Text("₹\(Int(totalSavings))")
-                    .font(.headline)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
+                Text("on this order")
+                    .font(.system(size: 13))
+                    .foregroundColor(.green.opacity(0.8))
             }
-            .fixedSize()
-            
-            Text("with this order")
-                .font(.headline)
-                .foregroundColor(.black)
             
             Spacer()
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
-        .background(Color("primaryRed").opacity(0.1))
-        .cornerRadius(8)
+        .padding(16)
+        .background(Color.green.opacity(0.1))
+        .cornerRadius(12)
     }
     
     // MARK: - Cart Items Section
@@ -195,17 +187,18 @@ struct CartView: View {
         VStack(spacing: 16) {
             HStack {
                 Text("Say thanks with a tip")
-                    .font(.headline)
-                    .fontWeight(.semibold)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.black)
                 
                 Spacer()
                 
                 Image(systemName: "info.circle")
                     .foregroundColor(.gray)
+                    .font(.system(size: 16))
             }
             
             Text("A small tip, a big gesture! Tip your delivery partner to show appreciation for their hard work.")
-                .font(.subheadline)
+                .font(.system(size: 14))
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             
@@ -214,26 +207,24 @@ struct CartView: View {
                     Button(action: {
                         selectedTipAmount = amount
                     }) {
-                        VStack(spacing: 4) {
+                        VStack(spacing: 6) {
                             Text("₹\(amount)")
-                                .font(.headline)
-                                .foregroundColor(selectedTipAmount == amount ? .white : .primary)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(selectedTipAmount == amount ? .white : .black)
                             
                             if amount == defaultTipOption {
                                 Text("Most tipped")
-                                    .font(.caption)
-                                    .foregroundColor(selectedTipAmount == amount ? .white : .blue)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundColor(selectedTipAmount == amount ? .white.opacity(0.9) : .blue)
                             }
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(selectedTipAmount == amount ? Color("primaryBlue") : Color.white)
-                        )
+                        .padding(.vertical, 18)
+                        .background(selectedTipAmount == amount ? Color.blue : Color.white)
+                        .cornerRadius(12)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(selectedTipAmount == amount ? Color("primaryBlue") : Color.gray.opacity(0.2), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(selectedTipAmount == amount ? Color.blue : Color.gray.opacity(0.2), lineWidth: 1.5)
                         )
                     }
                 }
@@ -243,25 +234,23 @@ struct CartView: View {
                     customTipInput = isCustom ? String(selectedTipAmount!) : ""
                     showingCustomTip = true
                 }) {
-                    VStack(spacing: 4) {
+                    VStack(spacing: 6) {
                         Text(isCustom ? "₹\(selectedTipAmount!)" : "Other")
-                            .font(.headline)
-                            .foregroundColor(isCustom ? .white : .primary)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(isCustom ? .white : .black)
                         if isCustom {
                             Text("Custom")
-                                .font(.caption)
+                                .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(.white.opacity(0.9))
                         }
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(isCustom ? Color("primaryBlue") : Color.white)
-                    )
+                    .padding(.vertical, 18)
+                    .background(isCustom ? Color.blue : Color.white)
+                    .cornerRadius(12)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(isCustom ? Color("primaryBlue") : Color.gray.opacity(0.2), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(isCustom ? Color.blue : Color.gray.opacity(0.2), lineWidth: 1.5)
                     )
                 }
             }
@@ -269,14 +258,15 @@ struct CartView: View {
             if selectedTipAmount != nil {
                 Button(action: { selectedTipAmount = nil }) {
                     Text("Remove tip")
-                        .font(.caption)
-                        .foregroundColor(Color("primaryBlue"))
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.blue)
                 }
             }
         }
-        .padding(16)
+        .padding(20)
         .background(Color.white)
         .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
     
     // MARK: - Promo Code Section
@@ -323,13 +313,12 @@ struct CartView: View {
     private var billDetailsSection: some View {
         VStack(spacing: 16) {
             Text("Bill Details")
-                .font(.title3)
-                .fontWeight(.bold)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(.black)
                 .frame(maxWidth: .infinity, alignment: .leading)
             
-            Group {
+            VStack(spacing: 14) {
                 billRow(title: "Item Total", value: cartViewModel.subtotal, originalValue: nil)
-                
                 billRow(title: "Delivery Fee", value: cartViewModel.deliveryFee, originalValue: nil)
                 
                 if selectedTipAmount != nil {
@@ -337,54 +326,52 @@ struct CartView: View {
                 } else {
                     HStack {
                         Text("Delivery Tip")
-                            .font(.body)
+                            .font(.system(size: 15))
                             .foregroundColor(.secondary)
                         Spacer()
                         Button(action: {
                             selectedTipAmount = defaultTipOption
                         }) {
                             Text("Add a tip")
-                                .font(.body)
-                                .foregroundColor(Color("primaryBlue"))
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(.blue)
                         }
                     }
                 }
                 
                 HStack {
                     Text("Delivery Partner Fee")
-                        .font(.body)
+                        .font(.system(size: 15))
                         .foregroundColor(.secondary)
                     
                     Spacer()
                     
                     Text("₹16.00")
-                        .font(.body)
+                        .font(.system(size: 15))
                         .strikethrough()
                         .foregroundColor(.gray)
                     
                     Text("FREE")
-                        .font(.body)
-                        .fontWeight(.medium)
-                        .foregroundColor(Color("primaryRed"))
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.red)
                 }
                 
                 billRow(title: "GST and Charges", value: cartViewModel.gst, originalValue: nil)
             }
-            .padding(.vertical, 4)
             
             Divider()
-                .padding(.vertical, 8)
+                .padding(.vertical, 4)
             
             HStack {
                 Text("To Pay")
-                    .font(.title3)
-                    .fontWeight(.bold)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.black)
                 
                 Spacer()
                 
                 if totalSavings > 0 {
                     Text("₹\(cartViewModel.total + totalSavings, specifier: "%.2f")")
-                        .font(.body)
+                        .font(.system(size: 15))
                         .strikethrough()
                         .foregroundColor(.gray)
                         .padding(.trailing, 8)
@@ -392,13 +379,12 @@ struct CartView: View {
                 
                 let totalWithTip = cartViewModel.total + Double(selectedTipAmount ?? 0)
                 Text("₹\(totalWithTip, specifier: "%.2f")")
-                    .font(.title3)
-                    .fontWeight(.bold)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.black)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 20)
-        .background(Color.white)
+        .padding(20)
+        .background(Color(.systemGray6))
         .cornerRadius(12)
     }
     
@@ -455,20 +441,19 @@ struct CartView: View {
         VStack(spacing: 0) {
             Divider()
             
-            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 4) {
                     let totalWithTip = cartViewModel.total + Double(selectedTipAmount ?? 0)
                     Text("₹\(totalWithTip, specifier: "%.2f")")
-                        .font(.title3)
-                        .fontWeight(.bold)
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundColor(.black)
                     
                     Button(action: {
                         showingDetailedBill = true
                     }) {
                         Text("View Detailed Bill")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundColor(Color("primaryBlue"))
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.blue)
                     }
                 }
                 
@@ -480,32 +465,29 @@ struct CartView: View {
                             selectedAddress = defaultAddress
                             showingCheckout = true
                         } else {
-                            // No default address, navigate to address selection
                             showingCheckout = true
                         }
                     } else {
-                        // Navigate to Login Tab
                         goToTab(3)
                     }
                 }) {
                     Text(userViewModel.isLoggedIn ? "Proceed to Pay" : "Login to Continue")
-                        .font(.headline)
-                        .fontWeight(.semibold)
+                        .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(.white)
-                        .padding(.horizontal, 24)
+                        .padding(.horizontal, 32)
                         .padding(.vertical, 18)
-                        .background(Color("primaryRed"))
+                        .background(Color.red)
                         .cornerRadius(12)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
             .padding(.bottom, max(16, UIApplication.shared.connectedScenes
                 .compactMap { $0 as? UIWindowScene }
                 .first?.windows.first?.safeAreaInsets.bottom ?? 16))
         }
         .background(Color.white)
-        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: -2)
+        .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: -5)
     }
     
     private func deleteItems(at offsets: IndexSet) {
@@ -538,162 +520,154 @@ struct CartItemRow: View {
     @State private var itemOffset: CGFloat = 0
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .top, spacing: 16) {
-                // Product Image with shadow and better styling
-                ZStack {
-                    Rectangle()
-                        .fill(Color.white)
-                        .frame(width: 65, height: 65)
-                        .cornerRadius(8)
-                        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
-                    
-                    Image(systemName: CategoryIconMap.iconName(for: item.product.category))
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 30, height: 30)
-                        .foregroundColor(Color(CategoryIconMap.colorName(for: item.product.category)))
-                }
-                .padding(.vertical, 4)
+        HStack(alignment: .center, spacing: 16) {
+            // Product Image - LARGER & MODERN
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.systemGray6))
+                    .frame(width: 80, height: 80)
                 
-                // Middle column - product details
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(item.product.name)
-                        .font(.system(size: 16, weight: .medium))
-                        .lineLimit(1)
-                    
-                    Text(item.product.weight)
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                    
-                    // Price with discount
-                    if let discountPrice = item.product.discountPrice {
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text("₹\(Int(discountPrice))")
-                                .font(.system(size: 16, weight: .semibold))
-                            
-                            Text("₹\(Int(item.product.price))")
-                                .font(.system(size: 14))
-                                .strikethrough()
-                                .foregroundColor(.gray)
-                            
-                            if let percentage = item.product.discountPercentage {
-                                Text("\(percentage)% OFF")
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundColor(Color("primaryRed"))
-                            }
-                        }
-                    } else {
-                        Text("₹\(Int(item.product.price))")
-                            .font(.system(size: 16, weight: .semibold))
-                    }
-                }
-                .padding(.vertical, 8)
+                Image(systemName: CategoryIconMap.iconName(for: item.product.category))
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+                    .foregroundColor(Color(CategoryIconMap.colorName(for: item.product.category)))
+            }
+            
+            // Product Details - BETTER TYPOGRAPHY
+            VStack(alignment: .leading, spacing: 6) {
+                Text(item.product.name)
+                    .font(.system(size: 16, weight: .semibold))
+                    .lineLimit(2)
+                    .foregroundColor(.black)
                 
-                Spacer()
+                Text(item.product.weight)
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
                 
-                // Right column - delete and quantity controls
-                VStack(alignment: .trailing, spacing: 8) {
-                    // Delete button
-                    Button(action: {
-                        showDeleteAlert = true
-                    }) {
-                        Image(systemName: "trash")
+                // Price Display - MODERN LAYOUT
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("₹\(Int(item.product.price))")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.black)
+                    
+                    if let mrp = item.product.mrp, mrp > item.product.price {
+                        Text("₹\(Int(mrp))")
                             .font(.system(size: 14))
-                            .foregroundColor(.red.opacity(0.8))
-                            .frame(width: 28, height: 28)
-                            .background(Color.red.opacity(0.1))
-                            .clipShape(Circle())
-                    }
-                    
-                    Spacer()
-                    
-                    // Quantity controls
-                    HStack(spacing: 0) {
-                        // Decrement Button
-                        Button(action: {
-                            guard !isDecrementProcessing, item.quantity > 1 else { return }
-                            isDecrementProcessing = true
-                            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                            impactFeedback.impactOccurred()
-                            
-                            withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
-                                flashDecrement = true
-                                quantityScale = 0.9
-                            }
-                            
-                            cartViewModel.decrementQuantity(cartItemId: item.id)
-                            
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
-                                    flashDecrement = false
-                                    quantityScale = 1.0
-                                }
-                                isDecrementProcessing = false
-                            }
-                        }) {
-                            Text("−")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(item.quantity <= 1 ? .gray : .black)
-                                .frame(width: 32, height: 32)
-                                .background(Color.gray.opacity(0.15))
-                                .cornerRadius(4, corners: [.topLeft, .bottomLeft])
-                        }
-                        .disabled(item.quantity <= 1 || isDecrementProcessing)
+                            .strikethrough()
+                            .foregroundColor(.gray)
                         
-                        // Quantity Display
-                        Text("\(item.quantity)")
-                            .font(.system(size: 16, weight: .medium))
-                            .frame(width: 32, height: 32)
-                            .background(Color.white)
-                            .scaleEffect(quantityScale)
-                            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: item.quantity)
-                        
-                        // Increment Button
-                        Button(action: {
-                            guard !isIncrementProcessing, item.quantity < item.product.stockQuantity else { return }
-                            isIncrementProcessing = true
-                            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                            impactFeedback.impactOccurred()
-                            
-                            withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
-                                flashIncrement = true
-                                quantityScale = 0.9
-                            }
-                            
-                            cartViewModel.incrementQuantity(cartItemId: item.id)
-                            
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
-                                    flashIncrement = false
-                                    quantityScale = 1.0
-                                }
-                                isIncrementProcessing = false
-                            }
-                        }) {
-                            Text("+")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(Color("primaryRed"))
-                                .frame(width: 32, height: 32)
-                                .background(Color("primaryRed").opacity(0.15))
-                                .cornerRadius(4, corners: [.topRight, .bottomRight])
-                        }
-                        .disabled(item.quantity >= item.product.stockQuantity || isIncrementProcessing)
+                        let percentage = ((mrp - item.product.price) / mrp) * 100
+                        Text("\(Int(percentage))% OFF")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.green)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.green.opacity(0.1))
+                            .cornerRadius(4)
                     }
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 4)
-                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                    )
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            
+            Spacer()
+            
+            // Quantity Controls - LARGER & MORE ACCESSIBLE
+            VStack(spacing: 12) {
+                // Delete button - CLEANER
+                Button(action: {
+                    showDeleteAlert = true
+                }) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 16))
+                        .foregroundColor(.red)
+                }
+                
+                // Quantity Controls - BIGGER TOUCH TARGETS
+                HStack(spacing: 0) {
+                    // Decrement Button
+                    Button(action: {
+                        guard !isDecrementProcessing, item.quantity > 1 else { return }
+                        isDecrementProcessing = true
+                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                        impactFeedback.impactOccurred()
+                        
+                        withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
+                            flashDecrement = true
+                            quantityScale = 0.9
+                        }
+                        
+                        cartViewModel.decrementQuantity(cartItemId: item.id)
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
+                                flashDecrement = false
+                                quantityScale = 1.0
+                            }
+                            isDecrementProcessing = false
+                        }
+                    }) {
+                        Image(systemName: "minus")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(item.quantity <= 1 ? .gray : .green)
+                            .frame(width: 36, height: 36)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8, corners: [.topLeft, .bottomLeft])
+                    }
+                    .disabled(item.quantity <= 1 || isDecrementProcessing)
+                    
+                    // Quantity Display
+                    Text("\(item.quantity)")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.black)
+                        .frame(width: 40, height: 36)
+                        .background(Color.white)
+                        .scaleEffect(quantityScale)
+                        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: item.quantity)
+                    
+                    // Increment Button
+                    Button(action: {
+                        guard !isIncrementProcessing, item.quantity < item.product.stockQuantity else { return }
+                        isIncrementProcessing = true
+                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                        impactFeedback.impactOccurred()
+                        
+                        withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
+                            flashIncrement = true
+                            quantityScale = 0.9
+                        }
+                        
+                        cartViewModel.incrementQuantity(cartItemId: item.id)
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
+                                flashIncrement = false
+                                quantityScale = 1.0
+                            }
+                            isIncrementProcessing = false
+                        }
+                    }) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.green)
+                            .frame(width: 36, height: 36)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8, corners: [.topRight, .bottomRight])
+                    }
+                    .disabled(item.quantity >= item.product.stockQuantity || isIncrementProcessing)
+                }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                )
+            }
         }
+        .padding(20)
         .background(Color.white)
-        .cornerRadius(8)
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
         .offset(x: itemOffset)
-        .padding(.horizontal, 2)
-        .padding(.vertical, 4)
+        .padding(.horizontal, 0)
+        .padding(.vertical, 6)
         .alert("Remove Item", isPresented: $showDeleteAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Remove", role: .destructive) {
@@ -719,10 +693,8 @@ struct DetailedBillView: View {
     private var totalSavings: Double {
         var total: Double = 0.0
         for item in cartViewModel.cartItems {
-            if let discountPrice = item.product.discountPrice {
-                let savings = (item.product.price - discountPrice) * Double(item.quantity)
-                total += savings
-            }
+            let savings = item.product.mrp != nil ? (item.product.mrp! - item.product.price) * Double(item.quantity) : 0.0
+            total += savings
         }
         return total
     }
@@ -772,14 +744,14 @@ struct DetailedBillView: View {
                             .font(.body)
                             .fontWeight(.medium)
                         
-                        Text("\(item.quantity) × ₹\(Int(item.product.discountPrice ?? item.product.price))")
+                        Text("\(item.quantity) × ₹\(Int(item.product.price))")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                     
                     Spacer()
                     
-                    Text("₹\(Int((item.product.discountPrice ?? item.product.price) * Double(item.quantity)))")
+                    Text("₹\(Int(item.product.price * Double(item.quantity)))")
                         .font(.body)
                         .fontWeight(.medium)
                 }

@@ -78,23 +78,34 @@ struct ProductCard: View {
                 }
                 .padding(.top, 1)
                 
-                // Price
-                HStack(alignment: .firstTextBaseline) {
-                    if let discountPrice = product.discountPrice {
-                        Text("₹\(Int(discountPrice))")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(.black)
-                        
-                        Text("₹\(Int(product.price))")
-                            .font(.system(size: 9))
+                // Price section with MRP and discount
+                VStack(alignment: .leading, spacing: 2) {
+                    // Show MRP with strikethrough if available
+                    if let mrp = product.mrp, mrp > product.price {
+                        Text("₹\(Int(mrp))")
+                            .font(.caption)
                             .strikethrough()
                             .foregroundColor(.gray)
-                    } else {
-                        Text("₹\(Int(product.price))")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(.black)
+                    }
+                    
+                    // Show selling price
+                    Text("₹\(Int(product.price))")
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                        .foregroundColor(Color("primaryGreen"))
+                    
+                    // Show discount badge
+                    if let discount = product.discountPercentage {
+                        Text("\(discount)% OFF")
+                            .font(.caption2)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(4)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.horizontal, 4)
             

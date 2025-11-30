@@ -372,19 +372,17 @@ struct OrderAgainView: View {
                 
                 // Price and enhanced add button
                 HStack {
-                    if let discountPrice = product.discountPrice {
-                        Text("₹\(Int(discountPrice))")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.black)
-                        
+                    VStack(alignment: .leading, spacing: 2) {
+                        if let mrp = product.mrp, mrp > product.price {
+                            Text("₹\(Int(mrp))")
+                                .font(.caption)
+                                .strikethrough()
+                                .foregroundColor(.gray)
+                        }
                         Text("₹\(Int(product.price))")
-                            .font(.system(size: 12))
-                            .strikethrough()
-                            .foregroundColor(.gray)
-                    } else {
-                        Text("₹\(Int(product.price))")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.black)
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .foregroundColor(Color("primaryGreen"))
                     }
                     
                     Spacer()
