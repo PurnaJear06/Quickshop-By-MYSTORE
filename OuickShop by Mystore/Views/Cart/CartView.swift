@@ -14,6 +14,9 @@ struct CartView: View {
     @State private var showingDetailedBill = false
     @State private var showingCustomTip = false
     @State private var customTipInput: String = ""
+    @State private var showingShareSheet = false
+    @State private var showingTipInfo = false
+    @State private var showingCancellationPolicy = false
     
     private let tipOptions = [10, 20, 30]
     private let defaultTipOption = 20
@@ -159,11 +162,14 @@ struct CartView: View {
                 
                 // Share button
                 Button(action: {
-                    // Share functionality would go here
+                    showingShareSheet = true
                 }) {
                     Image(systemName: "square.and.arrow.up")
                         .font(.title3)
                         .foregroundColor(.black)
+                }
+                .sheet(isPresented: $showingShareSheet) {
+                    ShareSheet(items: [generateShareText()])
                 }
             }
             .padding(.horizontal, 16)
@@ -220,12 +226,21 @@ struct CartView: View {
                 
                 Spacer()
                 
-                Image(systemName: "info.circle")
-                    .foregroundColor(.gray)
-                    .font(.system(size: 14))
+                Button(action: {
+                    showingTipInfo = true
+                }) {
+                    Image(systemName: "info.circle")
+                        .foregroundColor(.gray)
+                        .font(.system(size: 14))
+                }
+                .alert("About Tips", isPresented: $showingTipInfo) {
+                    Button("OK") {}
+                } message: {
+                    Text("100% of your tip goes directly to your delivery partner. Tips are optional but greatly appreciated!")
+                }
             }
             
-            Text("Show appreciation for their hard work")
+            Text("A small tip, a big gesture! Tip your delivery partner for their hard work.")
                 .font(.system(size: 13))
                 .foregroundColor(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -401,6 +416,15 @@ struct CartView: View {
         .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 1)
     }
     
+    // MARK: - Helper Functions
+    
+    private func generateShareText() -> String {
+        let itemCount = cartViewModel.cartItems.count
+        let total = cartViewModel.total
+        let itemWord = itemCount == 1 ? "item" : "items"
+        return "Check out my cart at QuickShop! \(itemCount) \(itemWord) for ₹\(Int(total)). Download the app now!"
+    }
+    
     // MARK: - Helper for Bill Row
     private func billRow(title: String, value: Double, originalValue: Double?) -> some View {
         HStack {
@@ -436,11 +460,16 @@ struct CartView: View {
                 .fixedSize(horizontal: false, vertical: true)
             
             Button(action: {
-                // Show cancellation policy
+                showingCancellationPolicy = true
             }) {
                 Text("Read cancellation policy")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(Color("primaryBlue"))
+            }
+            .alert("Cancellation Policy", isPresented: $showingCancellationPolicy) {
+                Button("I Understand") {}
+            } message: {
+                Text("Orders cannot be cancelled once packed for delivery. You may cancel within 60 seconds of placing the order. No refunds will be issued for items that have been dispatched.")
             }
         }
         .padding(12)
@@ -953,12 +982,12 @@ struct EmptyCartProductCard: View {
             
             // Price
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text("₹\\(Int(product.price))")
+                Text("₹\(Int(product.price))")
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.black)
                 
                 if let mrp = product.mrp, mrp > product.price {
-                    Text("₹\\(Int(mrp))")
+                    Text("₹\(Int(mrp))")
                         .font(.system(size: 11))
                         .strikethrough()
                         .foregroundColor(.gray)
@@ -1004,4 +1033,16 @@ struct EmptyCartProductCard: View {
         .cornerRadius(10)
         .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 1)
     }
+}
+
+// MARK: - ShareSheet Representable
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+    
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

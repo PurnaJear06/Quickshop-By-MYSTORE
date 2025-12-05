@@ -1,7 +1,11 @@
 import Foundation
 import Combine
+import FirebaseFirestore
+import FirebaseAuth
 
 class CartViewModel: ObservableObject {
+    // Firestore database reference
+    private let db = Firestore.firestore()
     // Published properties for UI updates
     @Published var cartItems: [CartItem] = []
     @Published var subtotal: Double = 0
@@ -115,14 +119,16 @@ class CartViewModel: ObservableObject {
             let currentItem = cartItems[index]
             let newQuantity = min(currentItem.quantity + quantity, currentItem.product.stockQuantity)
             
-            if newQuantity > 0 {
-                cartItems[index] = CartItem(
-                    id: currentItem.id,
-                    product: currentItem.product,
-                    quantity: newQuantity
-                )
-            } else {
-                cartItems.remove(at: index)
+            DispatchQueue.main.async {
+                if newQuantity > 0 {
+                    self.cartItems[index] = CartItem(
+                        id: currentItem.id,
+                        product: currentItem.product,
+                        quantity: newQuantity
+                    )
+                } else {
+                    self.cartItems.remove(at: index)
+                }
             }
         } else {
             // Create a mock product for the cart item
@@ -145,7 +151,9 @@ class CartViewModel: ObservableObject {
             let validQuantity = min(quantity, mockProduct.stockQuantity)
             if validQuantity > 0 {
                 let cartItem = CartItem(id: UUID().uuidString, product: mockProduct, quantity: validQuantity)
-                cartItems.append(cartItem)
+                DispatchQueue.main.async {
+                    self.cartItems.append(cartItem)
+                }
             }
         }
     }
@@ -221,10 +229,14 @@ class CartViewModel: ObservableObject {
         )
         newCartItems[index] = updatedItem
         
+        // Force UI update
+        objectWillChange.send()
+        
         // Update the entire array to ensure SwiftUI detects the change
         DispatchQueue.main.async {
             self.cartItems = newCartItems
             print("✅ Successfully incremented quantity to: \(self.cartItems[index].quantity)")
+            print("📊 Cart now has \(self.cartItems.count) items, subtotal: ₹\(self.subtotal)")
         }
     }
     
@@ -265,6 +277,9 @@ class CartViewModel: ObservableObject {
             newCartItems[index] = updatedItem
         }
         
+        // Force UI update
+        objectWillChange.send()
+        
         // Update the entire array to ensure SwiftUI detects the change
         DispatchQueue.main.async {
             self.cartItems = newCartItems
@@ -273,6 +288,7 @@ class CartViewModel: ObservableObject {
             } else {
                 print("✅ Successfully removed item from cart")
             }
+            print("📊 Cart now has \(self.cartItems.count) items, subtotal: ₹\(self.subtotal)")
         }
     }
     
@@ -284,14 +300,20 @@ class CartViewModel: ObservableObject {
     
     // Apply promo code
     func applyPromoCode() {
-        // Mock promo code validation
-        if promoCode.lowercased() == "welcome10" {
+        let code = promoCode.lowercased()
+        
+        if code == "welcome10" {
             // Apply 10% discount
             discount = subtotal * 0.1
             isPromoApplied = true
-        } else if promoCode.lowercased() == "flat50" {
+        } else if code == "flat50" {
             // Apply flat 50 discount
             discount = 50
+            isPromoApplied = true
+        } else if code == "welcome50" {
+            // Apply 50% discount with ₹200 maximum cap (like Zomato/Swiggy)
+            let calculatedDiscount = subtotal * 0.5
+            discount = min(calculatedDiscount, 200)
             isPromoApplied = true
         } else {
             // Invalid promo code
@@ -309,18 +331,66 @@ class CartViewModel: ObservableObject {
     
     // Checkout
     func checkout(address: Address, paymentMethod: PaymentMethod, completion: @escaping (Bool, String?) -> Void) {
-        // In a real app, this would create an order in Firebase
-        // For now, just simulate a successful checkout
+        // Get current user ID
+        guard let userId = Auth.auth().currentUser?.uid else {
+            completion(false, "User not logged in")
+            return
+        }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            guard let self = self else { return }
-            
-            // Simulate success
-            if !self.cartItems.isEmpty {
-                self.clearCart()
-                completion(true, nil)
-            } else {
-                completion(false, "Your cart is empty")
+        // Check cart not empty
+        guard !cartItems.isEmpty else {
+            completion(false, "Your cart is empty")
+            return
+        }
+        
+        // Generate unique order ID
+        let orderId = "OD\(Int.random(in: 100000...999999))"
+        
+        // Build order data for Firestore
+        let orderData: [String: Any] = [
+            "orderId": orderId,
+            "userId": userId,
+            "items": cartItems.map { item in
+                [
+                    "productId": item.product.id,
+                    "productName": item.product.name,
+                    "quantity": item.quantity,
+                    "price": item.product.price,
+                    "total": item.totalPrice
+                ]
+            },
+            "subtotal": subtotal,
+            "deliveryFee": deliveryFee,
+            "gst": gst,
+            "discount": discount,
+            "total": total,
+            "address": [
+                "title": address.title,
+                "fullAddress": address.fullAddress,
+                "landmark": address.landmark ?? ""
+            ],
+            "paymentMethod": paymentMethod.rawValue,
+            "paymentStatus": "pending",
+            "orderStatus": "pending",
+            "orderDate": Timestamp(),
+            "estimatedDelivery": Timestamp(date: Date().addingTimeInterval(30*60)), // 30 min ETA
+            "createdAt": Timestamp(),
+            "updatedAt": Timestamp()
+        ]
+        
+        // Save order to Firestore
+        db.collection("orders").document(orderId).setData(orderData) { [weak self] error in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                
+                if let error = error {
+                    print("❌ Order save failed: \(error.localizedDescription)")
+                    completion(false, error.localizedDescription)
+                } else {
+                    print("✅ Order \(orderId) saved successfully to Firestore")
+                    self.clearCart()
+                    completion(true, nil)
+                }
             }
         }
     }

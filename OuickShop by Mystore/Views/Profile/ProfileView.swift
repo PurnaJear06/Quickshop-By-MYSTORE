@@ -284,7 +284,7 @@ struct ProfileView: View {
     // Orders Section
     private func ordersSection(orders: [Order]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            NavigationLink(destination: OrdersView()) {
+            NavigationLink(destination: OrderHistoryView()) {
                 HStack {
                     Text("My Orders")
                         .font(.headline)
