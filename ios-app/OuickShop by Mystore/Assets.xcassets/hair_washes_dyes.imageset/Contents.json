@@ -1,0 +1,13 @@
+{
+  "images" : [
+    {
+      "filename" : "Hair washes and Hair Dyes.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+} 
