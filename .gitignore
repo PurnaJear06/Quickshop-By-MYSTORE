@@ -50,6 +50,8 @@ ios-app/.build/
 # Firebase
 ios-app/serviceAccountKey.json
 ios-app/quickshop-f8450-firebase-adminsdk-fbsvc-*.json
+serviceAccountKey.json
+quickshop-f8450-firebase-adminsdk-fbsvc-*.json
 
 # Backup files
 ios-app/**/*.backup
