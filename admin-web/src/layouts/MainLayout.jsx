@@ -1,13 +1,18 @@
-import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
+import Sidebar from '../components/Sidebar';
 
 const MainLayout = ({ children }) => {
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-slate-100">
             <Sidebar />
             <Header />
-            <main className="ml-64 mt-16 p-6">
-                {children}
+            <main
+                className="min-h-screen"
+                style={{ marginLeft: '240px', paddingTop: '64px' }}
+            >
+                <div className="p-6">
+                    {children}
+                </div>
             </main>
         </div>
     );

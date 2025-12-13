@@ -1,19 +1,25 @@
-const StatCard = ({ title, value, icon, trend }) => {
-    const isPositive = trend && trend > 0;
-
+const StatCard = ({ title, value, icon, isRevenue = false, trend }) => {
     return (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-gray-500 text-sm font-medium">{title}</p>
-                    <h3 className="text-2xl font-bold mt-2">{value}</h3>
-                    {trend && (
-                        <p className={`text-sm mt-2 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                            {isPositive ? '↑' : '↓'} {Math.abs(trend)}%
-                        </p>
-                    )}
+                    {/* Value - Green for revenue */}
+                    <div className="flex items-center gap-2">
+                        <span className={`text-2xl font-bold ${isRevenue ? 'text-emerald-600' : 'text-slate-900'}`}>
+                            {value}
+                        </span>
+                        {trend && (
+                            <span className="text-emerald-500 text-sm">↗₹</span>
+                        )}
+                    </div>
+                    {/* Label */}
+                    <p className="text-slate-500 text-sm mt-1">{title}</p>
                 </div>
-                <div className="text-4xl">{icon}</div>
+
+                {/* Simple icon - matching prototype */}
+                <div className="text-slate-400">
+                    {icon}
+                </div>
             </div>
         </div>
     );

@@ -2,55 +2,58 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Products - anyone can read, only admins can write
+    // ============================================
+    // DEVELOPMENT RULES - ALLOW ALL ACCESS
+    // TODO: Implement proper auth before production
+    // ============================================
+    
+    // Products - open read, dev write allowed
     match /products/{productId} {
-      allow read: if true;
-      allow write: if request.auth != null && 
-                     get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isAdmin == true;
+      allow read, write: if true;
     }
     
-    // Banners - anyone can read, only admins can write
+    // Banners - open read, dev write allowed
     match /banners/{bannerId} {
-      allow read: if true;
-      allow write: if request.auth != null && 
-                     get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isAdmin == true;
+      allow read, write: if true;
     }
     
-    // Categories - anyone can read, only admins can write
+    // Categories - open read, dev write allowed
     match /categories/{categoryId} {
-      allow read: if true;
-      allow write: if request.auth != null && 
-                     get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isAdmin == true;
+      allow read, write: if true;
     }
     
-    // Subcategories - anyone can read, only admins can write
+    // Subcategories - open read, dev write allowed
     match /subcategories/{subcategoryId} {
-      allow read: if true;
-      allow write: if request.auth != null && 
-                     get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isAdmin == true;
+      allow read, write: if true;
+    }
+    
+    // Dark Stores - open read, dev write allowed
+    match /darkStores/{storeId} {
+      allow read, write: if true;
+    }
+    
+    // Settings - open read/write for dev
+    match /settings/{settingId} {
+      allow read, write: if true;
     }
 
-    // Users can only access their own data
+    // Users - open for dev
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if true;
       
-      // Allow access to subcollections like addresses
       match /addresses/{addressId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if true;
       }
     }
     
-    // Orders - users can read their own, create new ones
+    // Orders - OPEN FOR DEV (admin dashboard needs this!)
     match /orders/{orderId} {
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read, write: if true;
     }
     
-    // Admins collection - only admins can access
+    // Admins - open for dev
     match /admins/{adminId} {
-      allow read, write: if request.auth != null && 
-                           get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isAdmin == true;
+      allow read, write: if true;
     }
   }
 }

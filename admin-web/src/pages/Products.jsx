@@ -11,37 +11,22 @@ const Products = () => {
     const [editingProduct, setEditingProduct] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterCategory, setFilterCategory] = useState('All');
-
-    // Form state
-    const [formData, setFormData] = useState({
-        name: '',
-        description: '',
-        price: '',
-        mrp: '',
-        gst: '5',
-        category: 'Dairy',
-        unit: 'kg',
-        quantity: '',
-        stock: '50',
-        isAvailable: true,
-        isFeatured: false,
-    });
     const [images, setImages] = useState([]);
-    const [imagePreivews, setImagePreviews] = useState([]);
+    const [imagePreviews, setImagePreviews] = useState([]);
 
-    const categories = ['All', 'Dairy', 'Fruits', 'Vegetables', 'Snacks', 'Beverages', 'Personal Care'];
+    const categories = ['All', 'Grocery', 'Dairy', 'Fruits', 'Vegetables', 'Snacks', 'Beverages', 'Personal Care'];
 
-    useEffect(() => {
-        fetchProducts();
-    }, []);
+    const [formData, setFormData] = useState({
+        name: '', description: '', price: '', mrp: '', gst: '5', category: 'Grocery',
+        unit: 'kg', quantity: '1', stock: '100', isAvailable: true, isFeatured: false,
+    });
+
+    useEffect(() => { fetchProducts(); }, []);
 
     const fetchProducts = async () => {
         try {
             const querySnapshot = await getDocs(collection(db, 'products'));
-            const productsData = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            const productsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setProducts(productsData);
             setLoading(false);
         } catch (error) {
@@ -51,32 +36,14 @@ const Products = () => {
     };
 
     const { getRootProps, getInputProps } = useDropzone({
-        accept: {
-            'image/*': ['.jpeg', '.jpg', '.png', '.webp']
-        },
+        accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.webp'] },
         maxFiles: 3,
         onDrop: (acceptedFiles) => {
-            if (images.length + acceptedFiles.length > 3) {
-                alert('Maximum 3 images allowed');
-                return;
-            }
-            setImages(prev => [...prev, ...acceptedFiles]);
-
-            // Create previews
-            acceptedFiles.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    setImagePreviews(prev => [...prev, reader.result]);
-                };
-                reader.readAsDataURL(file);
-            });
+            setImages([...images, ...acceptedFiles].slice(0, 3));
+            const newPreviews = acceptedFiles.map(file => URL.createObjectURL(file));
+            setImagePreviews([...imagePreviews, ...newPreviews].slice(0, 3));
         }
     });
-
-    const removeImage = (index) => {
-        setImages(prev => prev.filter((_, i) => i !== index));
-        setImagePreviews(prev => prev.filter((_, i) => i !== index));
-    };
 
     const uploadImages = async () => {
         const uploadPromises = images.map(async (image) => {
@@ -90,72 +57,51 @@ const Products = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-
         try {
-            // Upload images
-            const imageURLs = images.length > 0 ? await uploadImages() : [];
+            let imageURLs = editingProduct?.images || [];
+            if (images.length > 0) imageURLs = await uploadImages();
 
             const productData = {
                 ...formData,
                 price: parseFloat(formData.price),
                 mrp: parseFloat(formData.mrp),
                 gst: parseFloat(formData.gst),
-                quantity: parseFloat(formData.quantity),
                 stock: parseInt(formData.stock),
-                discountPercentage: Math.round(((formData.mrp - formData.price) / formData.mrp) * 100),
-                imageURL: imageURLs[0] || '',
                 images: imageURLs,
-                createdAt: new Date(),
+                discountPercentage: Math.round(((parseFloat(formData.mrp) - parseFloat(formData.price)) / parseFloat(formData.mrp)) * 100),
                 updatedAt: new Date(),
             };
 
             if (editingProduct) {
                 await updateDoc(doc(db, 'products', editingProduct.id), productData);
             } else {
+                productData.createdAt = new Date();
                 await addDoc(collection(db, 'products'), productData);
             }
-
             fetchProducts();
             closeModal();
         } catch (error) {
             console.error('Error saving product:', error);
-            alert('Error saving product');
         } finally {
             setLoading(false);
         }
     };
 
     const handleDelete = async (productId) => {
-        if (!confirm('Are you sure you want to delete this product?')) return;
-
+        if (!confirm('Delete this product?')) return;
         try {
             await deleteDoc(doc(db, 'products', productId));
             fetchProducts();
         } catch (error) {
-            console.error('Error deleting product:', error);
-            alert('Error deleting product');
+            console.error('Error:', error);
         }
     };
 
     const openModal = (product = null) => {
         if (product) {
             setEditingProduct(product);
-            setFormData({
-                name: product.name,
-                description: product.description || '',
-                price: product.price,
-                mrp: product.mrp,
-                gst: product.gst || 5,
-                category: product.category,
-                unit: product.unit,
-                quantity: product.quantity,
-                stock: product.stock || 50,
-                isAvailable: product.isAvailable,
-                isFeatured: product.isFeatured || false,
-            });
-            if (product.images && product.images.length > 0) {
-                setImagePreviews(product.images);
-            }
+            setFormData({ name: product.name || '', description: product.description || '', price: product.price?.toString() || '', mrp: product.mrp?.toString() || '', gst: product.gst?.toString() || '5', category: product.category || 'Grocery', unit: product.unit || 'kg', quantity: product.quantity || '1', stock: product.stock?.toString() || '100', isAvailable: product.isAvailable ?? true, isFeatured: product.isFeatured ?? false });
+            if (product.images?.length > 0) setImagePreviews(product.images);
         }
         setShowModal(true);
     };
@@ -163,123 +109,109 @@ const Products = () => {
     const closeModal = () => {
         setShowModal(false);
         setEditingProduct(null);
-        setFormData({
-            name: '',
-            description: '',
-            price: '',
-            mrp: '',
-            gst: '5',
-            category: 'Dairy',
-            unit: 'kg',
-            quantity: '',
-            stock: '50',
-            isAvailable: true,
-            isFeatured: false,
-        });
         setImages([]);
         setImagePreviews([]);
+        setFormData({ name: '', description: '', price: '', mrp: '', gst: '5', category: 'Grocery', unit: 'kg', quantity: '1', stock: '100', isAvailable: true, isFeatured: false });
     };
 
     const filteredProducts = products.filter(product => {
-        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = product.name?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = filterCategory === 'All' || product.category === filterCategory;
         return matchesSearch && matchesCategory;
     });
 
     return (
-        <div>
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-3xl font-bold">Products Management</h1>
+        <div className="space-y-6">
+            {/* Header with Search and Add Button */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-4 flex-1">
+                    {/* Search */}
+                    <div className="relative flex-1 max-w-md">
+                        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input
+                            type="text"
+                            placeholder="Search products..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                        />
+                    </div>
+                    {/* Category Filter */}
+                    <select
+                        value={filterCategory}
+                        onChange={(e) => setFilterCategory(e.target.value)}
+                        className="px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    >
+                        {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                </div>
+                {/* Add Button */}
                 <button
                     onClick={() => openModal()}
-                    className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg font-medium"
+                    className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-medium transition-colors"
                 >
-                    + Add Product
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Product
                 </button>
-            </div>
-
-            {/* Filters */}
-            <div className="flex gap-4 mb-6">
-                <input
-                    type="text"
-                    placeholder="Search products..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <select
-                    value={filterCategory}
-                    onChange={(e) => setFilterCategory(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                    {categories.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                </select>
             </div>
 
             {/* Products Grid */}
             {loading ? (
-                <div className="text-center py-12">Loading products...</div>
+                <div className="flex items-center justify-center py-12">
+                    <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
             ) : filteredProducts.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-lg">
-                    <p className="text-gray-500">No products found. Add your first product!</p>
+                <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
+                    <p className="text-slate-500">No products found</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {filteredProducts.map(product => (
-                        <div key={product.id} className="bg-white rounded-lg shadow overflow-hidden">
-                            <div className="h-48 bg-gray-200 relative">
-                                {product.imageURL || product.images?.[0] ? (
-                                    <img
-                                        src={product.imageURL || product.images[0]}
-                                        alt={product.name}
-                                        className="w-full h-full object-cover"
-                                    />
+                        <div key={product.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow">
+                            {/* Product Image */}
+                            <div className="aspect-square bg-slate-50 relative">
+                                {product.images?.[0] ? (
+                                    <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="flex items-center justify-center h-full text-gray-400">
-                                        No Image
+                                    <div className="w-full h-full flex items-center justify-center">
+                                        <svg className="w-16 h-16 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                        </svg>
                                     </div>
                                 )}
-                                {product.isFeatured && (
-                                    <span className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded">
-                                        Featured
-                                    </span>
+                                {/* Category Badge */}
+                                <span className="absolute top-3 left-3 bg-slate-900 text-white text-xs px-2 py-1 rounded-full">
+                                    {product.category}
+                                </span>
+                                {!product.isAvailable && (
+                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                        <span className="text-white font-medium">Out of Stock</span>
+                                    </div>
                                 )}
                             </div>
+                            {/* Product Info */}
                             <div className="p-4">
-                                <h3 className="font-bold text-lg mb-1">{product.name}</h3>
-                                <p className="text-gray-600 text-sm mb-2">{product.category}</p>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-2xl font-bold text-primary">₹{product.price}</span>
+                                <h3 className="font-semibold text-slate-900 truncate">{product.name}</h3>
+                                <p className="text-xs text-slate-500 mt-1">{product.quantity} {product.unit}</p>
+                                <div className="flex items-center gap-2 mt-2">
+                                    <span className="text-lg font-bold text-emerald-600">₹{product.price}</span>
                                     {product.mrp > product.price && (
-                                        <>
-                                            <span className="text-gray-400 line-through">₹{product.mrp}</span>
-                                            <span className="text-green-600 text-sm font-medium">
-                                                {product.discountPercentage}% off
-                                            </span>
-                                        </>
+                                        <span className="text-sm text-slate-400 line-through">₹{product.mrp}</span>
                                     )}
                                 </div>
-                                <p className="text-sm text-gray-600 mb-3">Stock: {product.stock || 0}</p>
-                                <div className="flex items-center gap-2">
-                                    <span className={`px-2 py-1 rounded-full text-xs ${product.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                        }`}>
-                                        {product.isAvailable ? 'Available' : 'Unavailable'}
-                                    </span>
-                                </div>
-                                <div className="flex gap-2 mt-4">
-                                    <button
-                                        onClick={() => openModal(product)}
-                                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded"
-                                    >
+                                {/* Actions */}
+                                <div className="flex gap-2 mt-3">
+                                    <button onClick={() => openModal(product)} className="flex-1 bg-slate-100 text-slate-700 py-2 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors">
                                         Edit
                                     </button>
-                                    <button
-                                        onClick={() => handleDelete(product.id)}
-                                        className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded"
-                                    >
-                                        Delete
+                                    <button onClick={() => handleDelete(product.id)} className="px-3 bg-red-50 text-red-600 py-2 rounded-lg text-sm hover:bg-red-100 transition-colors">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
                                     </button>
                                 </div>
                             </div>
@@ -288,186 +220,63 @@ const Products = () => {
                 </div>
             )}
 
-            {/* Add/Edit Modal */}
+            {/* Add/Edit Product Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-                    <div className="bg-white rounded-lg max-w-2xl w-full my-8">
-                        <div className="p-6 border-b">
-                            <h2 className="text-2xl font-bold">
-                                {editingProduct ? 'Edit Product' : 'Add New Product'}
-                            </h2>
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+                    <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+                            <h2 className="text-xl font-bold text-slate-900">{editingProduct ? 'Edit Product' : 'Add New Product'}</h2>
+                            <button onClick={closeModal} className="text-slate-400 hover:text-slate-600">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </div>
-                        <form onSubmit={handleSubmit} className="p-6">
+                        <form onSubmit={handleSubmit} className="p-5 space-y-4">
                             {/* Image Upload */}
-                            <div className="mb-6">
-                                <label className="block text-sm font-medium mb-2">Product Images (Max 3)</label>
-                                <div {...getRootProps()} className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-primary">
-                                    <input {...getInputProps()} />
-                                    <p className="text-gray-600">Drag & drop images here, or click to select</p>
-                                    <p className="text-sm text-gray-400 mt-1">Up to 3 images</p>
-                                </div>
-                                {imagePreviews.length > 0 && (
-                                    <div className="grid grid-cols-3 gap-4 mt-4">
-                                        {imagePreviews.map((preview, index) => (
-                                            <div key={index} className="relative">
-                                                <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-32 object-cover rounded" />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeImage(index)}
-                                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
-                                                >
-                                                    ×
-                                                </button>
-                                            </div>
-                                        ))}
+                            <div {...getRootProps()} className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center cursor-pointer hover:border-emerald-500 transition-colors">
+                                <input {...getInputProps()} />
+                                {imagePreviews.length > 0 ? (
+                                    <div className="flex gap-2 justify-center">
+                                        {imagePreviews.map((preview, i) => <img key={i} src={preview} alt="" className="w-20 h-20 object-cover rounded-lg" />)}
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <svg className="w-10 h-10 mx-auto text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        <p className="text-slate-500 text-sm mt-2">Drop images here or click to upload (max 3)</p>
                                     </div>
                                 )}
                             </div>
-
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Product Name*</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Category*</label>
-                                    <select
-                                        required
-                                        value={formData.category}
-                                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                                    >
-                                        {categories.filter(c => c !== 'All').map(cat => (
-                                            <option key={cat} value={cat}>{cat}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                            {/* Form Fields */}
+                            <input type="text" required placeholder="Product Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500" />
+                            <textarea placeholder="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20" rows="2" />
+                            <div className="grid grid-cols-2 gap-3">
+                                <input type="number" required placeholder="Price (₹)" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                                <input type="number" required placeholder="MRP (₹)" value={formData.mrp} onChange={(e) => setFormData({ ...formData, mrp: e.target.value })} className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
                             </div>
-
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium mb-1">Description</label>
-                                <textarea
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                                    rows="2"
-                                />
+                            <div className="grid grid-cols-2 gap-3">
+                                <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                                    {categories.filter(c => c !== 'All').map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                </select>
+                                <input type="number" placeholder="Stock" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} className="px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
                             </div>
-
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Price (₹)*</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        step="0.01"
-                                        value={formData.price}
-                                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">MRP (₹)*</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        step="0.01"
-                                        value={formData.mrp}
-                                        onChange={(e) => setFormData({ ...formData, mrp: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-4 mb-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">GST (%)</label>
-                                    <input
-                                        type="number"
-                                        value={formData.gst}
-                                        onChange={(e) => setFormData({ ...formData, gst: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Unit*</label>
-                                    <select
-                                        required
-                                        value={formData.unit}
-                                        onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                                    >
-                                        <option value="kg">kg</option>
-                                        <option value="g">g</option>
-                                        <option value="piece">piece</option>
-                                        <option value="liter">liter</option>
-                                        <option value="ml">ml</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Quantity*</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        step="0.01"
-                                        value={formData.quantity}
-                                        onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                                        className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium mb-1">Stock Quantity</label>
-                                <input
-                                    type="number"
-                                    value={formData.stock}
-                                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                                />
-                            </div>
-
-                            <div className="flex gap-6 mb-6">
-                                <label className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.isAvailable}
-                                        onChange={(e) => setFormData({ ...formData, isAvailable: e.target.checked })}
-                                        className="mr-2"
-                                    />
-                                    Available
+                            <div className="flex gap-6">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked={formData.isAvailable} onChange={(e) => setFormData({ ...formData, isAvailable: e.target.checked })} className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500" />
+                                    <span className="text-sm text-slate-700">Available</span>
                                 </label>
-                                <label className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.isFeatured}
-                                        onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                                        className="mr-2"
-                                    />
-                                    Featured
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked={formData.isFeatured} onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })} className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500" />
+                                    <span className="text-sm text-slate-700">Featured</span>
                                 </label>
                             </div>
-
-                            <div className="flex gap-3">
-                                <button
-                                    type="button"
-                                    onClick={closeModal}
-                                    className="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="flex-1 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded disabled:opacity-50"
-                                >
-                                    {loading ? 'Saving...' : (editingProduct ? 'Update Product' : 'Save Product')}
+                            {/* Actions */}
+                            <div className="flex gap-3 pt-2">
+                                <button type="button" onClick={closeModal} className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg hover:bg-slate-50 font-medium text-slate-700 transition-colors">Cancel</button>
+                                <button type="submit" disabled={loading} className="flex-1 bg-emerald-500 text-white px-4 py-2.5 rounded-lg hover:bg-emerald-600 font-medium disabled:opacity-50 transition-colors">
+                                    {loading ? 'Saving...' : 'Save Product'}
                                 </button>
                             </div>
                         </form>

@@ -1,98 +1,55 @@
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
 
-# ========================================
-# Admin Web (React/Vite)
-# ========================================
-admin-web/node_modules/
-admin-web/dist/
-admin-web/dist-ssr/
-admin-web/.env
-admin-web/.env.local
-admin-web/.env.*.local
-admin-web/*.local
-admin-web/npm-debug.log*
-admin-web/yarn-debug.log*
-admin-web/yarn-error.log*
-admin-web/pnpm-debug.log*
+# Build outputs
+dist/
+build/
+.firebase/
 
-# ========================================
-# iOS App (Xcode/Swift)
-# ========================================
-# Node modules (if using Firebase CLI or other npm tools)
-ios-app/node_modules/
-
-# Xcode
-ios-app/*.xcodeproj/xcuserdata/
-ios-app/*.xcworkspace/xcuserdata/
-ios-app/DerivedData/
-ios-app/*.moved-aside
-ios-app/*.pbxuser
-ios-app/!default.pbxuser
-ios-app/*.mode1v3
-ios-app/!default.mode1v3
-ios-app/*.mode2v3
-ios-app/!default.mode2v3
-ios-app/*.perspectivev3
-ios-app/!default.perspectivev3
-ios-app/xcuserdata/
-ios-app/*.xccheckout
-ios-app/*.xcscmblueprint
-ios-app/Pods/
-ios-app/Carthage/
-ios-app/*.ipa
-ios-app/*.dSYM.zip
-ios-app/*.dSYM
-ios-app/.build/
-
-# Firebase
-ios-app/serviceAccountKey.json
-ios-app/quickshop-f8450-firebase-adminsdk-fbsvc-*.json
-serviceAccountKey.json
-quickshop-f8450-firebase-adminsdk-fbsvc-*.json
-
-# Backup files
-ios-app/**/*.backup
-ios-app/**/*.bak
-ios-app/**/*.old
-ios-app/**/*.xml
-
-# ========================================
-# Android App
-# ========================================
-android-app/.gradle/
-android-app/.idea/
-android-app/build/
-android-app/local.properties
-android-app/*.iml
-android-app/*.apk
-android-app/*.ap_
-android-app/*.aab
-android-app/captures/
-android-app/.externalNativeBuild/
-android-app/.cxx/
-
-# ========================================
-# Common
-# ========================================
-# IDE
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-.idea/
-
-# Environment files
+# Environment variables
 .env
 .env.local
 .env.*.local
 
-# Logs
-logs/
-*.log
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# Firebase keys and secrets
-**/GoogleService-Info.plist.secret
-**/google-services.json.secret
-**/*-key.json
+# OS
+.DS_Store
+Thumbs.db
+
+# Xcode
+xcuserdata/
+*.xcworkspace
+!default.xcworkspace
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Backup files
+*.backup
+*.bak
+*.old
+*.xml
+
+# Logs
+*.log
+logs/

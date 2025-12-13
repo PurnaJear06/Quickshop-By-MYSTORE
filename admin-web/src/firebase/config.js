@@ -4,12 +4,13 @@ import { getAuth } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBZuuNg331doeCz_ZNL46v86mXNj_kuIS4",
+    apiKey: "AIzaSyADovI9usNr9bMvDfVFZy3C0DpxjnicvFw",
     authDomain: "quickshop-f8450.firebaseapp.com",
     projectId: "quickshop-f8450",
     storageBucket: "quickshop-f8450.firebasestorage.app",
     messagingSenderId: "799899725143",
-    appId: "1:799899725143:web:quickshop-admin"
+    appId: "1:799899725143:web:a827887d58c9a432eee212",
+    measurementId: "G-44W2C5PDGG"
 };
 
 // Initialize Firebase

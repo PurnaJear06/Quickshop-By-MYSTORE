@@ -1,6 +1,12 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #22C55E;
+  --color-primary-dark: #16A34A;
+  --color-primary-light: #4ADE80;
+  --color-sidebar: #1F2937;
+  --color-sidebar-light: #374151;
+}
 
 * {
   margin: 0;
